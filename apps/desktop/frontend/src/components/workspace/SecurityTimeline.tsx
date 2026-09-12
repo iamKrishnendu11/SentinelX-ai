@@ -6,6 +6,14 @@ import { TestSession, TestEvent } from "@/services/testService";
 import MachineControl from "./MachineControl";
 import CyberBattlefield from "./CyberBattlefield";
 import LiveEventConsole from "./LiveEventConsole";
+import AnalyzeDiscoverCard from "./AnalyzeDiscoverCard";
+import MultiAgentScanningCard from "./MultiAgentScanningCard";
+import RedTeamVulnerabilitiesCard from "./RedTeamVulnerabilitiesCard";
+import BlueTeamDefenseCard from "./BlueTeamDefenseCard";
+import ExploitVerificationCard from "./ExploitVerificationCard";
+import SelfHealingEngineCard from "./SelfHealingEngineCard";
+import PatchValidationCard from "./PatchValidationCard";
+import ReportsDeveloperNotesCard from "./ReportsDeveloperNotesCard";
 
 export const STAGES = [
   { id: "s1", name: "Initialization", label: "INPUT", desc: "Machine configuration and environment setup." },
@@ -76,16 +84,21 @@ export default function SecurityTimeline({
 
       <div ref={ref} className="relative max-w-7xl mx-auto pb-20 mt-16">
         {STAGES.map((item, index) => {
+          const stageNum = index + 1;
+          const isCompleted = currentStage > stageNum || (currentStage === stageNum && status === "COMPLETED");
+          const isRunning = currentStage === stageNum && status === "RUNNING";
+          const isFailed = currentStage === stageNum && status === "FAILED";
+          const isWaiting = currentStage < stageNum;
           const isCompleted = currentStage > index + 1 || (currentStage === index + 1 && status === "COMPLETED");
           const isRunning = currentStage === index + 1 && status === "RUNNING";
           const isFailed = currentStage === index + 1 && status === "FAILED";
           const isWaiting = currentStage < index + 1;
 
           return (
-            <div key={index} className="flex justify-start pt-10 md:pt-40 md:gap-10">
-              <div className="sticky flex flex-col md:flex-row z-40 items-center top-40 self-start max-w-xs lg:max-w-sm md:w-full">
+            <div key={item.id} className="flex justify-start pt-10 md:pt-32 md:gap-10">
+              <div className="sticky flex flex-col md:flex-row z-10 items-center top-32 self-start max-w-xs lg:max-w-sm md:w-full">
                 <div className="h-10 absolute left-3 md:left-3 w-10 rounded-full bg-panel flex items-center justify-center border border-white/10">
-                  <div className={`h-4 w-4 rounded-full border p-2 transition-colors duration-500 ${
+                  <div className={`h-4 w-4 rounded-full border transition-colors duration-500 ${
                     isRunning ? "bg-lime border-lime shadow-[0_0_15px_#B7FF00] animate-pulse" : 
                     isFailed ? "bg-red-500 border-red-500 shadow-[0_0_15px_#ef4444]" :
                     isCompleted ? "bg-lime border-lime" :
@@ -93,7 +106,7 @@ export default function SecurityTimeline({
                   }`} />
                 </div>
                 <div className="hidden md:flex flex-col md:pl-20">
-                  <h3 className={`text-xl md:text-4xl lg:text-5xl font-display font-bold uppercase tracking-tight ${
+                  <h3 className={`text-xl md:text-3xl lg:text-4xl font-display font-bold uppercase tracking-tight ${
                     isWaiting ? "text-white/20" : isFailed ? "text-red-500" : isCompleted ? "text-lime" : isRunning ? "text-lime" : "text-fog"
                   }`}>
                     {item.name}
@@ -110,12 +123,12 @@ export default function SecurityTimeline({
                 }`}>
                   {item.name}
                 </h3>
-                <p className="text-ash mb-8 text-sm max-w-lg leading-relaxed">
+                <p className="text-ash mb-6 text-sm max-w-lg leading-relaxed">
                   {item.desc}
                 </p>
 
                 {/* Embedded Content Blocks based on stage */}
-                <div className="w-full">
+                <div className="w-full space-y-6">
                   {index === 0 && (
                     <div className="w-full max-w-2xl">
                       <MachineControl 
@@ -127,20 +140,63 @@ export default function SecurityTimeline({
                     </div>
                   )}
 
+                  {index === 1 && (
+                    <div className="w-full max-w-4xl">
+                      <AnalyzeDiscoverCard />
+                    </div>
+                  )}
+
                   {index === 2 && (
                     <div className="w-full max-w-3xl h-[350px]">
                       <LiveEventConsole events={events.filter(e => e.stage <= 3)} />
                     </div>
                   )}
 
-                  {index === 4 && (
+                  {index === 3 && (
                     <div className="w-full max-w-4xl">
+                      <MultiAgentScanningCard />
+                    </div>
+                  )}
+
+                  {index === 4 && (
+                    <div className="w-full max-w-4xl space-y-6">
                       <CyberBattlefield session={session} events={events} />
+                      <RedTeamVulnerabilitiesCard />
+                    </div>
+                  )}
+
+                  {index === 5 && (
+                    <div className="w-full max-w-4xl">
+                      <BlueTeamDefenseCard />
+                    </div>
+                  )}
+
+                  {index === 6 && (
+                    <div className="w-full max-w-4xl">
+                      <ExploitVerificationCard />
+                    </div>
+                  )}
+
+                  {index === 7 && (
+                    <div className="w-full max-w-4xl">
+                      <SelfHealingEngineCard />
+                    </div>
+                  )}
+
+                  {index === 8 && (
+                    <div className="w-full max-w-4xl">
+                      <PatchValidationCard />
+                    </div>
+                  )}
+
+                  {index === 9 && (
+                    <div className="w-full max-w-4xl">
+                      <ReportsDeveloperNotesCard />
                     </div>
                   )}
                   
                   {index === 9 && isFailed && (
-                     <div className="border border-red-500/30 bg-red-500/10 p-6">
+                     <div className="border border-red-500/30 bg-red-500/10 p-6 rounded-xl">
                         <p className="font-mono text-xs text-red-400 font-bold uppercase tracking-widest mb-2">SYSTEM HALTED</p>
                         <p className="text-sm text-red-400/80">The autonomous loop encountered an unrecoverable backend error. Diagnostics available in telemetry.</p>
                      </div>

@@ -77,14 +77,22 @@ public class LocalGitHubController {
         }
 
         String accessToken = null;
-        String githubUserId = "gh_" + Math.abs(code.hashCode());
-        String username = "github_user_" + Math.abs(code.hashCode() % 1000);
+        String githubUserId = null;
+        String username = null;
         String displayName = "GitHub User";
-        String email = username + "@github.local";
+        String email = null;
         String avatarUrl = "https://github.com/ghost.png";
         String profileUrl = "https://github.com";
 
-        if (clientSecret != null && !clientSecret.isBlank()) {
+        if (clientSecret == null || clientSecret.isBlank()) {
+            if (code.startsWith("ghp_") || code.startsWith("github_pat_")) {
+                accessToken = code;
+            } else {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "error", "GitHub Client Secret is not configured on the backend. Please configure github.client-secret or provide a GitHub Personal Access Token."
+                ));
+            }
+        } else {
             try {
                 // 1. Exchange OAuth authorization code for GitHub Access Token
                 Map<String, String> tokenReq = Map.of(
@@ -103,30 +111,39 @@ public class LocalGitHubController {
                 if (tokenResp.getStatusCode().is2xxSuccessful() && tokenResp.getBody() != null) {
                     accessToken = (String) tokenResp.getBody().get("access_token");
                 }
-
-                // 2. Fetch real GitHub user profile from API
-                if (accessToken != null && !accessToken.isBlank()) {
-                    HttpHeaders userHeaders = new HttpHeaders();
-                    userHeaders.setBearerAuth(accessToken);
-                    userHeaders.set("User-Agent", "SentinelX-Desktop");
-                    HttpEntity<Void> userEntity = new HttpEntity<>(userHeaders);
-
-                    ResponseEntity<Map> userResp = restTemplate.exchange(
-                            "https://api.github.com/user", HttpMethod.GET, userEntity, Map.class);
-
-                    if (userResp.getStatusCode().is2xxSuccessful() && userResp.getBody() != null) {
-                        Map<String, Object> userMap = userResp.getBody();
-                        if (userMap.get("id") != null) githubUserId = String.valueOf(userMap.get("id"));
-                        if (userMap.get("login") != null) username = (String) userMap.get("login");
-                        if (userMap.get("name") != null) displayName = (String) userMap.get("name");
-                        if (userMap.get("email") != null) email = (String) userMap.get("email");
-                        if (userMap.get("avatar_url") != null) avatarUrl = (String) userMap.get("avatar_url");
-                        if (userMap.get("html_url") != null) profileUrl = (String) userMap.get("html_url");
-                    }
-                }
             } catch (Exception e) {
-                System.err.println("[LocalGitHubController] Error fetching GitHub profile: " + e.getMessage());
+                System.err.println("[LocalGitHubController] Error exchanging OAuth code: " + e.getMessage());
             }
+        }
+
+        if (accessToken == null || accessToken.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Failed to obtain valid GitHub access token"));
+        }
+
+        try {
+            HttpHeaders userHeaders = new HttpHeaders();
+            userHeaders.setBearerAuth(accessToken);
+            userHeaders.set("User-Agent", "SentinelX-Desktop");
+            HttpEntity<Void> userEntity = new HttpEntity<>(userHeaders);
+
+            ResponseEntity<Map> userResp = restTemplate.exchange(
+                    "https://api.github.com/user", HttpMethod.GET, userEntity, Map.class);
+
+            if (userResp.getStatusCode().is2xxSuccessful() && userResp.getBody() != null) {
+                Map<String, Object> userMap = userResp.getBody();
+                if (userMap.get("id") != null) githubUserId = String.valueOf(userMap.get("id"));
+                if (userMap.get("login") != null) username = (String) userMap.get("login");
+                if (userMap.get("name") != null) displayName = (String) userMap.get("name");
+                if (userMap.get("email") != null) email = (String) userMap.get("email");
+                if (userMap.get("avatar_url") != null) avatarUrl = (String) userMap.get("avatar_url");
+                if (userMap.get("html_url") != null) profileUrl = (String) userMap.get("html_url");
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(502).body(Map.of("error", "Failed to fetch GitHub profile with provided token: " + e.getMessage()));
+        }
+
+        if (githubUserId == null || username == null) {
+            return ResponseEntity.status(502).body(Map.of("error", "Could not retrieve GitHub profile details"));
         }
 
         // Save real GitHub account in local SQLite and store access token securely in OS SecureCredentialStore

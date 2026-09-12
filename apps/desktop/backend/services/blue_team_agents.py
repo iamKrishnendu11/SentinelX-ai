@@ -17,8 +17,8 @@ from schemas.remediation import PatchItem, RemediationReport
 
 logger = logging.getLogger(__name__)
 
-OLLAMA_API_URL = "http://localhost:11434/api/generate"
-OLLAMA_MODEL = "qwen2.5-coder:7b"
+OLLAMA_API_URL = os.getenv("OLLAMA_API_URL", "http://localhost:11434/api/generate")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5-coder:7b")
 
 # Limit concurrent Ollama requests to avoid queue timeouts on local GPU/CPU
 ollama_semaphore = asyncio.Semaphore(2)
@@ -102,7 +102,7 @@ async def generate_code_patch(finding: VulnerabilityFinding, repo_path: Optional
     fallback_used = False
     raw_response = ""
     try:
-        raw_response = await asyncio.wait_for(call_ollama_remediation(prompt), timeout=8.0)
+        raw_response = await asyncio.wait_for(call_ollama_remediation(prompt), timeout=30.0)
     except Exception as e:
         logger.warning(f"Ollama remediation call timed out or failed ({e}). Engaging rule-based fallback.")
         fallback_used = True
@@ -151,6 +151,8 @@ def generate_rule_based_fix(finding: VulnerabilityFinding) -> str:
             return snippet.replace("f\"", "\"").replace("f'", "'") + f"\n{comment} Secure Fix: Parameterized query binding applied."
         return snippet + f"\n{comment} Secure Fix: Parameterized query placeholder applied."
     elif "secret" in title_lower or "key" in title_lower or "password" in title_lower:
+        if ext == ".py":
+            return re.sub(r"([\"'])[A-Za-z0-9_\-]{8,}([\"'])", r'os.environ.get("SECRET_KEY", \1REDACTED_SECRET\2)', snippet)
         return re.sub(r"([\"'])[A-Za-z0-9_\-]{8,}([\"'])", r"process.env.SECRET_KEY || \1REDACTED_SECRET\2", snippet)
     elif "command" in title_lower or "exec" in title_lower:
         return snippet + f"\n{comment} Secure Fix: Input validation and array argument execution applied."
@@ -270,19 +272,37 @@ async def process_single_finding(finding: VulnerabilityFinding, repo_path: str, 
     dev_note = patch_res["developer_note"]
     fallback_used = patch_res.get("fallback_used", False)
 
-    # Build updated content
+    # Build updated content safely without wiping source files when snippet match fails
     updated_file_content = original_content
+    snippet_matched = False
+
     if finding.raw_snippet in original_content:
         updated_file_content = original_content.replace(finding.raw_snippet, patched_code, 1)
+        snippet_matched = True
     elif finding.raw_snippet.replace("\r\n", "\n") in original_content.replace("\r\n", "\n"):
         norm_orig = original_content.replace("\r\n", "\n")
         norm_snip = finding.raw_snippet.replace("\r\n", "\n")
         updated_file_content = norm_orig.replace(norm_snip, patched_code, 1)
+        snippet_matched = True
+    elif is_local_repo and original_content != finding.raw_snippet:
+        # Try line-number targeted replacement if snippet match fails
+        lines = original_content.splitlines(keepends=True)
+        if 1 <= finding.line_number <= len(lines):
+            lines[finding.line_number - 1] = patched_code + ("\n" if not patched_code.endswith("\n") else "")
+            updated_file_content = "".join(lines)
+            snippet_matched = True
+        else:
+            updated_file_content = original_content
+            snippet_matched = False
     else:
         updated_file_content = patched_code
+        snippet_matched = True
 
     # Syntax validation
     syntax_valid, error_details = validate_syntax(finding.file_path, updated_file_content)
+    if not snippet_matched:
+        syntax_valid = False
+        error_details = f"Target snippet match failed in {finding.file_path}. Original source file preserved."
 
     applied_to_disk = False
     if syntax_valid and auto_apply and target_file_full and os.path.exists(target_file_full):

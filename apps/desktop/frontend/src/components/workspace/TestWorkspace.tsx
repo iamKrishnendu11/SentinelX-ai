@@ -37,6 +37,53 @@ export default function TestWorkspace({ projectId }: { projectId: string }) {
     };
   }, [projectId]);
 
+  // Autonomous Stage Progression Loop
+  useEffect(() => {
+    if (!session || session.status !== "RUNNING") return;
+    if (session.currentStage >= 10) return;
+
+    const timer = setTimeout(() => {
+      const nextStage = session.currentStage + 1;
+      const ts = new Date().toTimeString().slice(0, 8);
+
+      const stageMessages: Record<number, { message: string; type: "info" | "success" | "error" | "warning" }> = {
+        2: { message: "Analyzing target repository codebase & dependency graph...", type: "info" },
+        3: { message: "Digital Twin replica sandbox containerized successfully.", type: "success" },
+        4: { message: "Multi-Agent Scanners deployed (Semgrep, Gitleaks, Trivy).", type: "info" },
+        5: { message: "Red Team: Exploiting SQL Injection payload on /api/v1/user", type: "error" },
+        6: { message: "Blue Team: Shielding endpoint with parameterized query filter.", type: "success" },
+        7: { message: "Red Team: Verifying CSRF token validation and session isolation.", type: "warning" },
+        8: { message: "Self-Healing Engine: Generating AST code patch for SQL binding.", type: "info" },
+        9: { message: "Patch Validation: AST syntax check passed. All unit tests green.", type: "success" },
+        10: { message: "Audit Complete: All vulnerabilities remediated. Digital Twin sandbox disengaged.", type: "success" },
+      };
+
+      const stageInfo = stageMessages[nextStage] || { message: `Executing stage ${nextStage}...`, type: "info" };
+
+      setEvents((prev) => [
+        ...prev,
+        {
+          id: `ev-${nextStage}-${Date.now()}`,
+          timestamp: ts,
+          stage: nextStage,
+          message: stageInfo.message,
+          type: stageInfo.type,
+        },
+      ]);
+
+      setSession((prev) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          currentStage: nextStage,
+          status: nextStage >= 10 ? "COMPLETED" : "RUNNING",
+          message: stageInfo.message,
+        };
+      });
+    }, 2800);
+
+    return () => clearTimeout(timer);
+  }, [session]);
   // Stage progression timer when running
   useEffect(() => {
     if (!session || session.status !== "RUNNING") return;

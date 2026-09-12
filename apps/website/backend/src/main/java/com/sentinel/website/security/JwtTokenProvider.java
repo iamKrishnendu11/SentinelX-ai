@@ -21,10 +21,17 @@ public class JwtTokenProvider {
     private final SecretKey key;
     private final long accessTokenExpirationMs;
 
+    private static final String DEFAULT_SECRET = "sentinelx_default_jwt_secret_key_minimum_32_bytes_long_123456";
+
     public JwtTokenProvider(
             @Value("${jwt.secret:sentinelx_default_jwt_secret_key_minimum_32_bytes_long_123456}") String secret,
             @Value("${jwt.expiration-ms:900000}") long accessTokenExpirationMs) {
-        this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        if (secret == null || secret.isBlank() || DEFAULT_SECRET.equals(secret)) {
+            System.err.println("[SECURITY WARNING] jwt.secret environment variable is missing! Generating transient cryptographically secure random HMAC key.");
+            this.key = Jwts.SIG.HS256.key().build();
+        } else {
+            this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        }
         this.accessTokenExpirationMs = accessTokenExpirationMs;
     }
 

@@ -34,4 +34,21 @@ public class LocalScanController {
         List<Vulnerability> vulns = scanService.getVulnerabilitiesForScan(activeUserId, scanId);
         return ResponseEntity.ok(vulns);
     }
+
+    @PostMapping("/projects/{projectId}/test/start")
+    public ResponseEntity<java.util.Map<String, Object>> startTestSession(@PathVariable("projectId") String projectId) {
+        String activeUserId = userService.getActiveSentinelUserId();
+        java.util.Map<String, Object> session = scanService.startTestSession(activeUserId, projectId);
+        return ResponseEntity.ok(session);
+    }
+
+    @GetMapping("/projects/{projectId}/test/status")
+    public ResponseEntity<java.util.Map<String, Object>> getTestStatus(@PathVariable("projectId") String projectId) {
+        String activeUserId = userService.getActiveSentinelUserId();
+        java.util.Map<String, Object> session = scanService.getTestStatus(activeUserId, projectId);
+        if (session == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(session);
+    }
 }

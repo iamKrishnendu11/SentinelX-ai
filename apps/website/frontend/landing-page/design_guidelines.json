@@ -1,0 +1,148 @@
+
+{
+  "project_name": "SentinelX AI",
+  "design_concept": "Bloomberg Terminal × modern AI lab × elite cybersecurity platform",
+  "theme": "dark",
+ "colors": {
+    "background": {
+      "primary": "#050505",
+      "secondary": "#0D0F0D"
+9|    },
+10|    "accent": {
+11|      "primary": "#B7FF00",
+12|      "secondary": "linear-gradient(180deg, rgba(255,255,255,0.1), rgba(255,255,255,0.02))"
+13|    },
+14|    "text": {
+15|      "primary": "#F4F4F0",
+16|      "muted": "#8B8F88"
+17|    },
+18|    "border": {
+19|      "default": "rgba(255, 255, 255, 0.12)",
+20|      "technical": "rgba(255, 255, 255, 0.08)"
+21|    }
+22|  },
+23|  "typography": {
+24|    "headings": {
+25|      "font": "'Space Grotesk', sans-serif",
+26|      "style": "uppercase, tight letter-spacing (tracking-tight), high visual dominance"
+27|    },
+28|    "metadata": {
+29|      "font": "'JetBrains Mono', monospace",
+30|      "style": "used for timestamps, metrics, code diffs, logs, small labels, tabular-nums"
+31|    },
+32|    "body": {
+33|      "font": "'Inter', sans-serif",
+34|      "style": "clean, readable, slightly muted"
+35|    }
+36|  },
+37|  "visual_enhancers": {
+38|    "glow": "Subtle #B7FF00 green glow only on active/important interactive states. Avoid neon overload.",
+39|    "borders": "Thin technical grid lines (1px solid rgba(255,255,255,0.12)). Use border-collapse for grid layouts.",
+40|    "texture": "Subtle grain/noise texture overlay on backgrounds to remove flat digital feel.",
+41|    "glassmorphism": "Use sparingly. For sticky nav or tooltips: backdrop-blur-xl with bg-black/60 and thin inner border."
+42|  },
+43|  "layouts": {
+44|    "spacing": "Generous spacing. Use p-12, p-16, p-24 for main sections. Internal card padding p-6 or p-8.",
+45|    "grid": "Bento Grids for data dashboards. Asymmetrical layouts for editorial/problem sections."
+46|  },
+47|  "components": [
+48|    {
+49|      "name": "Navbar",
+50|      "description": "Sticky, glass effect on scroll",
+51|      "guidelines": "Fixed at top, z-50. Backdrop blur, borders. Logo left, navigation center, primary CTA right. Use data-testid on links."
+52|    },
+53|    {
+54|      "name": "Hero Section",
+55|      "description": "Interactive Security Core visualization",
+56|      "guidelines": "Massive H1 title. Visual: Orbiting AI agents (SVG circles/nodes) around a central 'Core', attack vectors hitting shield layers, live status labels (Mono font). Animated with Framer Motion."
+57|    },
+58|    {
+59|      "name": "Problem Section",
+60|      "description": "3 Editorial Cards",
+61|      "guidelines": "Asymmetrical layout. Large numbers/typography. Stark contrast between card background (#0D0F0D) and primary background."
+62|    },
+63|    {
+64|      "name": "Autonomous Loop Pipeline",
+65|      "description": "CODE → UNDERSTAND → ATTACK → VERIFY → HEAL → PREDICT",
+66|      "guidelines": "Clickable horizontal or vertical stepper. Clicking updates a connected information panel displaying technical metadata for that stage."
+67|    },
+68|    {
+69|      "name": "Digital Twin Split-Screen",
+70|      "description": "Real app vs isolated twin",
+71|      "guidelines": "Split layout (1:1). Left side: Real-world app. Right side: Isolated twin with animated attack vectors (arrows, red/green dots, paths drawn using framer-motion SVG stroke animation)."
+72|    },
+73|    {
+74|      "name": "Multi-Agent AI Constellation",
+75|      "description": "SENTINELX CORE + 6 agents",
+76|      "guidelines": "Network node diagram. Central core with 6 connected agents. Hovering over an agent expands a detail card with live stats."
+77|    },
+78|    {
+79|      "name": "Red Team vs Blue Team Feed",
+80|      "description": "Live battle event feed",
+81|      "guidelines": "Scrolling terminal-like list. Mono font. Red team events (ATTACK) vs Blue team events (DEFEND/PATCH). Use counters at the top."
+82|    },
+83|    {
+84|      "name": "Self-Healing Diff",
+85|      "description": "3-column code diff display",
+86|      "guidelines": "Columns: Vulnerability | AI Patch | Validation. Show realistic code diff (red highlights for removed, green for added). Pure CSS/HTML layout, no images."
+87|    },
+88|    {
+89|      "name": "Security Intelligence Dashboard",
+90|      "description": "Bento-style dashboard mockup",
+91|      "guidelines": "Use Recharts for a trend chart and attack surface graph. Include security score (massive text), vuln counts, agent activity, risk distribution pie chart, and patch status."
+92|    },
+93|    {
+94|      "name": "DevSecOps Pipeline",
+95|      "description": "GitHub PR card mockup",
+96|      "guidelines": "Simulate a GitHub Pull Request interface showing the AI automatically reviewing code and merging a patch."
+97|    },
+98|    {
+99|      "name": "Technology Stack Grid",
+100|      "description": "Monochrome logos with lime hover",
+101|      "guidelines": "Grid of `react-icons/si` (AWS, Docker, K8s, Python, etc.). Default color muted gray, hover color #B7FF00 with slight scale."
+102|    },
+103|    {
+104|      "name": "Final CTA",
+105|      "description": "Dramatic final call to action",
+106|      "guidelines": "High impact. Massive text. Primary lime button with magnetic hover effect."
+107|    },
+108|    {
+109|      "name": "Footer",
+110|      "description": "Minimal footer",
+111|      "guidelines": "Simple links, technical aesthetic, mono font for copyright."
+112|    }
+113|  ],
+114|  "motion": {
+115|    "libraries": ["framer-motion", "lucide-react", "recharts"],
+116|    "guidelines": "Smooth scrolling via Lenis. Scroll-triggered section reveals. Number counters for metrics. Animated SVG paths for attack vectors. Do not over-animate; prioritize premium clinical feel."
+117|  },
+118|  "images": {
+119|    "textures": [
+120|      {
+121|        "url": "https://images.pexels.com/photos/9665216/pexels-photo-9665216.jpeg",
+122|        "category": "background_texture",
+123|        "description": "Dust/noise texture for background. Set to low opacity (5%) with mix-blend-mode overlay to achieve the subtle grain texture."
+124|      }
+125|    ]
+126|  },
+127|  "instructions_to_main_agent": [
+128|    "You are building a premium Javascript/React frontend. NO Typescript (.tsx). Use standard .jsx or .js files.",
+129|    "Include <link href='https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;700&family=Space+Grotesk:wght@400;600;700&display=swap' rel='stylesheet'> in your public/index.html.",
+130|    "Apply fonts globally in tailwind.config.js (fontFamily: { sans: ['Inter'], display: ['Space Grotesk'], mono: ['JetBrains Mono'] }).",
+131|    "Implement the 'Security Core' hero with Framer Motion, utilizing rotating `<motion.div>` rings and nodes.",
+132|    "For the Tech Stack grid, import icons from `react-icons/si` and `react-icons/fa` instead of images.",
+133|    "Implement Recharts with custom tooltips and #B7FF00 stroke colors for the dashboard section.",
+134|    "Ensure the entire app is fully responsive (mobile, tablet, desktop) using Tailwind classes.",
+135|    "Create realistic code diffs using styled `pre` and `code` tags with `JetBrains Mono`.",
+136|    "Add `data-testid` to EVERY interactive element (buttons, links, pipeline stages, nav items, dashboard tabs, etc.)."
+137|  ],
+138|  "universal_guidelines_for_main_agent": [
+139|    "Do NOT center align the app container. No generic `.App { text-align: center; }`.",
+140|    "DO NOT use pure transparent backgrounds for navbars, dropdowns, or elements that overlap content.",
+141|    "Avoid generic AI illustrations (brains, matrix rain). Keep it strictly 'Bloomberg Terminal x AI Lab' (technical, data-heavy, precise, clinical).",
+142|    "Use layered z-indexes and 1px borders to create depth, avoiding thick shadows.",
+143|    "Never use `transition: all`. Specify properties (e.g., `transition-colors`, `transition-transform`).",
+144|    "Only use the electric lime (#B7FF00) for highly interactive items, primary buttons, or critical data points. Do NOT overuse it as a background."
+145|  ]
+146|}
+[End of file]

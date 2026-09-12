@@ -78,7 +78,7 @@ const Navbar = ({ onScan }: any) => {
                     }`}
                 >
                     <a href="#top" data-testid="nav-logo" className="flex items-center gap-2.5 group">
-                        <Shield size={16} className="text-lime group-hover:text-[#cfff4d] transition-colors" />
+                        <img src="/logo.png" alt="SentinelX Logo" className="w-5 h-5 object-contain" />
                         <span className="font-display font-bold tracking-tight text-xs sm:text-sm text-[#F5F5F0]">
                             SENTINELX AI
                         </span>

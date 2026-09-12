@@ -7,6 +7,8 @@ class RemediationRequest(BaseModel):
     auto_apply: bool = True
     create_git_branch: bool = True
     branch_name: Optional[str] = "sentinelx/security-patches"
+    github_token: Optional[str] = None
+    create_pull_request: bool = False
     findings: list[VulnerabilityFinding] = Field(default_factory=list)
 
 class PatchItem(BaseModel):
@@ -21,6 +23,7 @@ class PatchItem(BaseModel):
     applied_to_disk: bool = False
     backup_file_path: Optional[str] = None
     error_details: Optional[str] = None
+    fallback_used: bool = False
 
 class RemediationReport(BaseModel):
     total_attempted: int = 0

@@ -209,8 +209,11 @@ async def execute_audit_pipeline(repo_url: str, branch: str) -> AsyncGenerator[d
         for t in trivy_results:
             all_findings.append({"scanner_source": "trivy", "data": t})
 
+        heuristic_fallback_engaged = False
         # Run heuristic scanner fallback if no CLI scanner results found
         if not all_findings:
+            heuristic_fallback_engaged = True
+            yield {"event": "HEURISTIC_FALLBACK_ENGAGED", "data": "CLI missing or empty. Defaulting to internal heuristic regex scanner."}
             heuristic_results = run_heuristic_scan(temp_dir)
             for h in heuristic_results:
                 all_findings.append({"scanner_source": "heuristic", "data": h})
@@ -228,6 +231,7 @@ async def execute_audit_pipeline(repo_url: str, branch: str) -> AsyncGenerator[d
             tech_stack=tech_stack,
             total_raw_findings=total_raw,
             verified_vulnerabilities=verified_findings,
+            heuristic_fallback_engaged=heuristic_fallback_engaged,
             scan_duration_sec=scan_duration
         )
 

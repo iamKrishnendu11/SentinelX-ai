@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { TransitionLink as Link } from "@/components/ui/transition-link";
 import { authApi } from "@/lib/api";

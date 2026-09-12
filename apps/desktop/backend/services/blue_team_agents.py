@@ -143,17 +143,19 @@ def generate_rule_based_fix(finding: VulnerabilityFinding) -> str:
     """
     snippet = finding.raw_snippet
     title_lower = finding.title.lower()
+    ext = os.path.splitext(finding.file_path)[1].lower()
+    comment = "#" if ext in [".py", ".sh", ".yml", ".yaml"] else "//"
 
     if "sql" in title_lower or "injection" in title_lower:
         if "f\"" in snippet or "f'" in snippet or "+" in snippet:
-            return snippet.replace("f\"", "\"").replace("f'", "'") + "\n// Secure Fix: Parameterized query binding applied."
-        return snippet + "\n// Secure Fix: Parameterized query placeholder applied."
+            return snippet.replace("f\"", "\"").replace("f'", "'") + f"\n{comment} Secure Fix: Parameterized query binding applied."
+        return snippet + f"\n{comment} Secure Fix: Parameterized query placeholder applied."
     elif "secret" in title_lower or "key" in title_lower or "password" in title_lower:
         return re.sub(r"([\"'])[A-Za-z0-9_\-]{8,}([\"'])", r"process.env.SECRET_KEY || \1REDACTED_SECRET\2", snippet)
     elif "command" in title_lower or "exec" in title_lower:
-        return snippet + "\n// Secure Fix: Input validation and array argument execution applied."
+        return snippet + f"\n{comment} Secure Fix: Input validation and array argument execution applied."
     
-    return snippet + "\n// Secure Fix: Sanitization and security guardrail applied."
+    return snippet + f"\n{comment} Secure Fix: Sanitization and security guardrail applied."
 
 def build_default_dev_note(finding: VulnerabilityFinding) -> dict[str, str]:
     return {

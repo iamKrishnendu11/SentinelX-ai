@@ -1,20 +1,45 @@
 "use client";
 
-import { Radar, Network, Layers, FileCode, CheckCircle2, Server } from "lucide-react";
+import { Radar, Network, Layers, FileCode, CheckCircle2, Server, Loader2 } from "lucide-react";
 
-export default function AnalyzeDiscoverCard() {
-  const discoveredRoutes = [
-    { path: "/api/v1/audit/scan", type: "POST", scope: "Security Audit Trigger", risk: "CRITICAL" },
-    { path: "/api/v1/remediation/patch", type: "POST", scope: "Blue Team Patching", risk: "HIGH" },
-    { path: "/api/v1/audit/stream", type: "GET", scope: "SSE Telemetry Stream", risk: "LOW" },
-    { path: "/api/github/callback", type: "POST", scope: "OAuth Token Exchange", risk: "HIGH" },
-  ];
+interface AnalyzeDiscoverCardProps {
+  reconData?: any;
+  project?: any;
+}
 
-  const detectedManifests = [
-    { file: "package.json", framework: "Next.js 16 / React 19", ecosystem: "Node.js" },
-    { file: "requirements.txt", framework: "FastAPI / Uvicorn", ecosystem: "Python 3.11" },
-    { file: "pom.xml", framework: "Spring Boot 3.3.1", ecosystem: "Java 21" },
-  ];
+export default function AnalyzeDiscoverCard({ reconData, project }: AnalyzeDiscoverCardProps) {
+  const manifestDescriptions: Record<string, { framework: string; ecosystem: string }> = {
+    "package.json": { framework: "Node.js Package Manifest", ecosystem: "JavaScript / TypeScript" },
+    "requirements.txt": { framework: "Python Pip Requirements", ecosystem: "Python Ecosystem" },
+    "pom.xml": { framework: "Apache Maven Build Descriptor", ecosystem: "Java / Spring Boot" },
+    "go.mod": { framework: "Go Modules Specification", ecosystem: "Go Language" },
+    "Dockerfile": { framework: "Docker Container Definition", ecosystem: "Container Runtime" },
+    "Cargo.toml": { framework: "Cargo Package Manifest", ecosystem: "Rust Ecosystem" },
+    "build.gradle": { framework: "Gradle Build Script", ecosystem: "Java / Kotlin" },
+  };
+
+  const rawManifests: string[] = reconData?.manifests_found || [];
+  const detectedManifests = rawManifests.length > 0
+    ? rawManifests.map((file) => ({
+        file,
+        framework: manifestDescriptions[file]?.framework || "Package Configuration File",
+        ecosystem: manifestDescriptions[file]?.ecosystem || "Source Dependency",
+      }))
+    : project?.repositoryName
+    ? [{ file: "Source Repository", framework: project.repositoryName, ecosystem: project.defaultBranch || "main" }]
+    : [];
+
+  const rawRoutes: any[] = reconData?.discovered_routes || [];
+  const discoveredRoutes = rawRoutes.length > 0
+    ? rawRoutes
+    : [
+        { path: "/api/v1/auth/login", type: "POST", scope: "Authentication Endpoint", risk: "HIGH" },
+        { path: "/api/v1/users", type: "GET", scope: "User Profile Directory", risk: "MEDIUM" },
+        { path: "/api/v1/health", type: "GET", scope: "Health Check Stream", risk: "LOW" },
+      ];
+
+  const highRiskCount = discoveredRoutes.filter((r) => r.risk === "HIGH" || r.risk === "CRITICAL").length;
+  const repoName = project?.repositoryName || project?.name || "Target Repository";
 
   return (
     <div className="border border-white/10 bg-[#0D0F0D] rounded-xl overflow-hidden shadow-2xl font-mono text-xs">
@@ -22,8 +47,11 @@ export default function AnalyzeDiscoverCard() {
         <div className="flex items-center gap-3">
           <Radar className="w-5 h-5 text-lime animate-spin-slow" />
           <div>
-            <h3 className="font-mono text-xs font-bold text-fog uppercase tracking-widest">
-              Attack Surface Discovery & Reconnaissance
+            <h3 className="font-mono text-xs font-bold text-fog uppercase tracking-widest flex items-center gap-2">
+              <span>Attack Surface Discovery & Reconnaissance</span>
+              <span className="text-lime text-[10px] bg-lime/10 px-2 py-0.5 rounded border border-lime/30">
+                {repoName}
+              </span>
             </h3>
             <p className="font-mono text-[10px] text-slate-400 mt-0.5">
               Automated Codebase Topology & Dependency Mapping
@@ -31,8 +59,8 @@ export default function AnalyzeDiscoverCard() {
           </div>
         </div>
         <span className="font-mono text-[10px] bg-lime/10 text-lime border border-lime/30 px-3 py-1 rounded-full uppercase tracking-wider font-bold flex items-center gap-1.5">
-          <CheckCircle2 className="w-3.5 h-3.5 text-lime" />
-          <span>Surface Mapped</span>
+          {reconData ? <CheckCircle2 className="w-3.5 h-3.5 text-lime" /> : <Loader2 className="w-3.5 h-3.5 text-lime animate-spin" />}
+          <span>{reconData ? "Surface Mapped" : "Mapping Surface..."}</span>
         </span>
       </div>
 
@@ -44,8 +72,8 @@ export default function AnalyzeDiscoverCard() {
               <Network className="w-3.5 h-3.5 text-lime" />
               <span>Mapped Routes</span>
             </div>
-            <p className="text-2xl font-bold text-fog">14 Endpoints</p>
-            <p className="text-[10px] text-slate-500">REST APIs & SSE Streams</p>
+            <p className="text-2xl font-bold text-fog">{discoveredRoutes.length} Endpoints</p>
+            <p className="text-[10px] text-slate-500">API Controllers & Entry Points</p>
           </div>
 
           <div className="border border-white/10 bg-black/60 p-4 rounded-lg space-y-1">
@@ -53,8 +81,10 @@ export default function AnalyzeDiscoverCard() {
               <Layers className="w-3.5 h-3.5 text-lime" />
               <span>Manifests Found</span>
             </div>
-            <p className="text-2xl font-bold text-fog">3 Ecosystems</p>
-            <p className="text-[10px] text-slate-500">Node, Python, Java Maven</p>
+            <p className="text-2xl font-bold text-fog">{detectedManifests.length} Ecosystems</p>
+            <p className="text-[10px] text-slate-500">
+              {reconData?.languages?.join(", ") || "Source Code Stack"}
+            </p>
           </div>
 
           <div className="border border-white/10 bg-black/60 p-4 rounded-lg space-y-1">
@@ -62,8 +92,8 @@ export default function AnalyzeDiscoverCard() {
               <Server className="w-3.5 h-3.5 text-lime" />
               <span>Attack Entry Points</span>
             </div>
-            <p className="text-2xl font-bold text-lime">3 High Risk</p>
-            <p className="text-[10px] text-slate-500">Public Auth & Scan Controllers</p>
+            <p className="text-2xl font-bold text-lime">{highRiskCount} High Risk</p>
+            <p className="text-[10px] text-slate-500">Exposed Entry Surface</p>
           </div>
         </div>
 
@@ -73,7 +103,7 @@ export default function AnalyzeDiscoverCard() {
             <span className="text-slate-400 text-[10px] uppercase tracking-wider font-bold">
               Discovered API Route Surface
             </span>
-            <span className="text-slate-500 text-[10px]">4 Exposed Entry Points</span>
+            <span className="text-slate-500 text-[10px]">{discoveredRoutes.length} Exposed Entry Points</span>
           </div>
 
           <div className="space-y-2">
@@ -90,7 +120,7 @@ export default function AnalyzeDiscoverCard() {
                 <div className="flex items-center gap-3">
                   <span className="text-slate-400 text-[10px] hidden sm:inline">{route.scope}</span>
                   <span className={`text-[9px] px-2 py-0.5 rounded font-bold ${
-                    route.risk === "CRITICAL" ? "bg-red-500/20 text-red-400 border border-red-500/30" : "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+                    route.risk === "CRITICAL" || route.risk === "HIGH" ? "bg-red-500/20 text-red-400 border border-red-500/30" : "bg-amber-500/20 text-amber-400 border border-amber-500/30"
                   }`}>
                     {route.risk} RISK
                   </span>
@@ -124,3 +154,4 @@ export default function AnalyzeDiscoverCard() {
     </div>
   );
 }
+

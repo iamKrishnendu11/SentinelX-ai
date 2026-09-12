@@ -19,6 +19,8 @@ export default function TestWorkspace({ projectId }: { projectId: string }) {
   const [realPatches, setRealPatches] = useState<any[]>([]);
   const [realDevNotes, setRealDevNotes] = useState<any[]>([]);
   const [telemetryEvents, setTelemetryEvents] = useState<any[]>([]);
+  const [reconData, setReconData] = useState<any | null>(null);
+  const [heuristicFallback, setHeuristicFallback] = useState<boolean>(false);
   const unsubscribeRef = useRef<(() => void) | null>(null);
 
   // Initial load
@@ -65,6 +67,8 @@ export default function TestWorkspace({ projectId }: { projectId: string }) {
     setRealPatches([]);
     setRealDevNotes([]);
     setTelemetryEvents([]);
+    setReconData(null);
+    setHeuristicFallback(false);
     
     addEvent("Initializing SentinelX environment...", "info", 1);
     
@@ -86,9 +90,15 @@ export default function TestWorkspace({ projectId }: { projectId: string }) {
           if (type === "RECON_STARTED") {
             setSession(s => s ? { ...s, currentStage: 2, status: "RUNNING" } : null);
             addEvent(msg, "info", 2);
+          } else if (type === "RECON_COMPLETED") {
+            setReconData(sseEvent.data);
+            addEvent(`Reconnaissance Complete: ${sseEvent.data.manifests_found?.length || 0} manifest(s) identified.`, "success", 2);
           } else if (type === "SCANNERS_RUNNING") {
             setSession(s => s ? { ...s, currentStage: 4, status: "RUNNING" } : null);
             addEvent(msg, "info", 4);
+          } else if (type === "HEURISTIC_FALLBACK_ENGAGED") {
+            setHeuristicFallback(true);
+            addEvent("CLI tools missing locally. Defaulting to internal heuristic scanner.", "warning", 4);
           } else if (type === "AI_TRIAGE_ACTIVE") {
             addEvent(msg, "info", 4);
           } else if (type === "TELEMETRY_PROBE") {
@@ -189,6 +199,9 @@ export default function TestWorkspace({ projectId }: { projectId: string }) {
           realPatches={realPatches}
           realDevNotes={realDevNotes}
           telemetryEvents={telemetryEvents}
+          reconData={reconData}
+          project={project}
+          heuristicFallback={heuristicFallback}
         />
       </div>
     </div>

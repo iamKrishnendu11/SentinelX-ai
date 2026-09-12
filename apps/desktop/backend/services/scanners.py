@@ -1,5 +1,6 @@
 import os
 import re
+import shutil
 import asyncio
 import json
 import logging
@@ -10,7 +11,12 @@ logger = logging.getLogger(__name__)
 
 def _exec_cmd(cmd: list[str], cwd: str) -> tuple[int, str]:
     try:
-        res = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, errors="ignore")
+        executable = shutil.which(cmd[0])
+        if not executable:
+            logger.info(f"CLI tool '{cmd[0]}' not installed in system PATH. Skipping {cmd[0]} scan.")
+            return -1, ""
+        use_shell = (os.name == "nt")
+        res = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, errors="ignore", shell=use_shell)
         return res.returncode, res.stdout
     except Exception as e:
         logger.warning(f"CLI command execution error ({cmd[0]}): {e}")
@@ -73,7 +79,7 @@ def run_heuristic_scan(target_dir: str) -> list[dict[str, Any]]:
             "title": "Possible SQL Injection",
             "cwe": "CWE-89",
             "severity": "CRITICAL",
-            "pattern": r"(select|insert|update|delete)\s+.*?\+.*?|f[\"'].*?(select|insert|update|delete)",
+            "pattern": r"(select|insert|update|delete)\s+.*?\+.*?|f[\"'].*?(select|insert|update|delete)|query\(\s*[\"'].*?\$",
             "flags": re.IGNORECASE
         },
         {
@@ -81,7 +87,7 @@ def run_heuristic_scan(target_dir: str) -> list[dict[str, Any]]:
             "title": "Hardcoded API Key / Password Secret",
             "cwe": "CWE-798",
             "severity": "HIGH",
-            "pattern": r"(api[_-]?key|password|secret[_-]?key)\s*=\s*[\"'][A-Za-z0-9_\-]{8,}[\"']",
+            "pattern": r"(api[_-]?key|password|secret[_-]?key|jwt[_-]?secret|private[_-]?key)\s*=\s*[\"'][A-Za-z0-9_\-]{8,}[\"']",
             "flags": re.IGNORECASE
         },
         {
@@ -89,7 +95,39 @@ def run_heuristic_scan(target_dir: str) -> list[dict[str, Any]]:
             "title": "Unsafe Command Execution",
             "cwe": "CWE-78",
             "severity": "HIGH",
-            "pattern": r"(os\.system|subprocess\.Popen|eval|exec)\(.*?f[\"']",
+            "pattern": r"(os\.system|subprocess\.Popen|eval|exec|child_process\.exec)\(.*?f?[\"']",
+            "flags": re.IGNORECASE
+        },
+        {
+            "id": "heuristic-path-traversal",
+            "title": "Potential Path Traversal",
+            "cwe": "CWE-22",
+            "severity": "HIGH",
+            "pattern": r"open\([^)]*req\.|sendFile\([^)]*req\.|os\.path\.join\([^)]*params",
+            "flags": re.IGNORECASE
+        },
+        {
+            "id": "heuristic-xss-html-injection",
+            "title": "Cross-Site Scripting (XSS) / Unsafe HTML Render",
+            "cwe": "CWE-79",
+            "severity": "MEDIUM",
+            "pattern": r"dangerouslySetInnerHTML|innerHTML\s*=|document\.write\(|v-html",
+            "flags": re.IGNORECASE
+        },
+        {
+            "id": "heuristic-insecure-cors",
+            "title": "Permissive Wildcard CORS Policy",
+            "cwe": "CWE-942",
+            "severity": "MEDIUM",
+            "pattern": r"Access-Control-Allow-Origin.*?[\"']\*[\"']|cors\(\s*\{\s*origin\s*:\s*[\"']\*[\"']",
+            "flags": re.IGNORECASE
+        },
+        {
+            "id": "heuristic-weak-crypto",
+            "title": "Weak Cryptographic Hash / Algorithm",
+            "cwe": "CWE-327",
+            "severity": "LOW",
+            "pattern": r"createHash\([\"'](md5|sha1)[\"']\)|hashlib\.(md5|sha1)\(",
             "flags": re.IGNORECASE
         }
     ]
@@ -97,9 +135,12 @@ def run_heuristic_scan(target_dir: str) -> list[dict[str, Any]]:
     for root, dirs, files in os.walk(target_dir):
         if ".git" in dirs: dirs.remove(".git")
         if "node_modules" in dirs: dirs.remove("node_modules")
+        if "target" in dirs: dirs.remove("target")
+        if "__pycache__" in dirs: dirs.remove("__pycache__")
+        if ".next" in dirs: dirs.remove(".next")
 
         for file in files:
-            if not file.endswith((".py", ".js", ".ts", ".java", ".php", ".go", ".sql")):
+            if not file.endswith((".py", ".js", ".ts", ".jsx", ".tsx", ".java", ".php", ".go", ".sql", ".json", ".html", ".env")):
                 continue
             
             filepath = os.path.join(root, file)
@@ -129,3 +170,4 @@ def run_heuristic_scan(target_dir: str) -> list[dict[str, Any]]:
                 logger.debug(f"Could not read {filepath} for heuristic scan: {e}")
 
     return findings
+

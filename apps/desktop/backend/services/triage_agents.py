@@ -27,7 +27,8 @@ async def run_recon(target_dir: str) -> dict[str, Any]:
     tech_stack: dict[str, Any] = {
         "languages": [],
         "frameworks": [],
-        "manifests_found": []
+        "manifests_found": [],
+        "discovered_routes": []
     }
 
     manifest_map = {
@@ -35,7 +36,9 @@ async def run_recon(target_dir: str) -> dict[str, Any]:
         "requirements.txt": ("Python", "pip"),
         "pom.xml": ("Java", "Maven"),
         "go.mod": ("Go", "Go Modules"),
-        "Dockerfile": ("Docker", "Container")
+        "Dockerfile": ("Docker", "Container"),
+        "Cargo.toml": ("Rust", "Cargo"),
+        "build.gradle": ("Java/Kotlin", "Gradle")
     }
 
     for filename, (lang, fw) in manifest_map.items():
@@ -46,6 +49,47 @@ async def run_recon(target_dir: str) -> dict[str, Any]:
             if fw not in tech_stack["frameworks"]:
                 tech_stack["frameworks"].append(fw)
 
+    # Walk files to discover API routes dynamically
+    routes = []
+    route_patterns = [
+        (r'@(?:Get|Post|Put|Delete|Patch)Mapping\s*\(\s*["\']([^"\']+)["\']', "Java Spring"),
+        (r'@app\.(get|post|put|delete|patch)\s*\(\s*["\']([^"\']+)["\']', "Python FastAPI/Flask"),
+        (r'router\.(get|post|put|delete|patch)\s*\(\s*["\']([^"\']+)["\']', "Node.js Express"),
+        (r'app\.(get|post|put|delete|patch)\s*\(\s*["\']([^"\']+)["\']', "Node.js Express"),
+    ]
+
+    for root, dirs, files in os.walk(target_dir):
+        if ".git" in dirs: dirs.remove(".git")
+        if "node_modules" in dirs: dirs.remove("node_modules")
+        if "target" in dirs: dirs.remove("target")
+        if "__pycache__" in dirs: dirs.remove("__pycache__")
+
+        for file in files:
+            if not file.endswith((".py", ".js", ".ts", ".java", ".go")):
+                continue
+            filepath = os.path.join(root, file)
+            try:
+                with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
+                    content = f.read()
+                    for pattern, framework in route_patterns:
+                        matches = re.findall(pattern, content, re.IGNORECASE)
+                        for match in matches:
+                            route_path = match[1] if isinstance(match, tuple) else match
+                            route_type = match[0].upper() if isinstance(match, tuple) and len(match) > 1 and match[0].isalpha() else "GET"
+                            routes.append({
+                                "path": route_path if route_path.startswith("/") else "/" + route_path,
+                                "type": route_type,
+                                "scope": f"{framework} Controller",
+                                "risk": "HIGH" if "auth" in route_path.lower() or "admin" in route_path.lower() or "pay" in route_path.lower() else "MEDIUM"
+                            })
+                            if len(routes) >= 10:
+                                break
+            except Exception:
+                pass
+            if len(routes) >= 10:
+                break
+
+    tech_stack["discovered_routes"] = routes
     return tech_stack
 
 async def call_ollama_triage(prompt: str) -> str:
@@ -205,6 +249,7 @@ async def execute_audit_pipeline(repo_url: str, branch: str) -> AsyncGenerator[d
             target_dir = temp_dir
 
         tech_stack = await run_recon(target_dir)
+        yield {"event": "RECON_COMPLETED", "data": tech_stack}
 
         yield {"event": "SCANNERS_RUNNING", "message": "Executing static code & dependency analysis tools..."}
 

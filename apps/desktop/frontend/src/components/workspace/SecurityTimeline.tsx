@@ -37,7 +37,10 @@ export default function SecurityTimeline({
   realVulnerabilities = [],
   realPatches = [],
   realDevNotes = [],
-  telemetryEvents = []
+  telemetryEvents = [],
+  reconData,
+  project,
+  heuristicFallback = false
 }: {
   session: TestSession | null;
   events: TestEvent[];
@@ -48,6 +51,9 @@ export default function SecurityTimeline({
   realPatches?: any[];
   realDevNotes?: any[];
   telemetryEvents?: any[];
+  reconData?: any;
+  project?: any;
+  heuristicFallback?: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -146,7 +152,7 @@ export default function SecurityTimeline({
 
                   {index === 1 && (
                     <div className="w-full max-w-4xl">
-                      <AnalyzeDiscoverCard />
+                      <AnalyzeDiscoverCard reconData={reconData} project={project} />
                     </div>
                   )}
 
@@ -158,7 +164,7 @@ export default function SecurityTimeline({
 
                   {index === 3 && (
                     <div className="w-full max-w-4xl">
-                      <MultiAgentScanningCard />
+                      <MultiAgentScanningCard vulnerabilities={realVulnerabilities} fallbackEngaged={heuristicFallback} />
                     </div>
                   )}
 

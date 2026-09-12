@@ -2,43 +2,69 @@
 
 import { ShieldCheck, Cpu, Terminal, Key, ShieldAlert, PackageCheck, AlertCircle } from "lucide-react";
 
-export default function MultiAgentScanningCard() {
+interface MultiAgentScanningCardProps {
+  vulnerabilities?: any[];
+  fallbackEngaged?: boolean;
+}
+
+export default function MultiAgentScanningCard({ vulnerabilities = [], fallbackEngaged = false }: MultiAgentScanningCardProps) {
+  const semgrepFindings = vulnerabilities.filter(v => v.scanner_source === "semgrep").length;
+  const gitleaksFindings = vulnerabilities.filter(v => v.scanner_source === "gitleaks").length;
+  const trivyFindings = vulnerabilities.filter(v => v.scanner_source === "trivy").length;
+  const heuristicFindings = vulnerabilities.filter(v => v.scanner_source === "heuristic").length;
+
   const agentScanners = [
     {
       name: "Semgrep SAST Engine",
       role: "Static Code Analysis",
       rulesRun: 14,
-      findings: 1,
-      status: "COMPLETED",
+      findings: semgrepFindings,
+      status: fallbackEngaged ? "SKIPPED (CLI MISSING)" : "COMPLETED",
       icon: Cpu,
-      telemetry: "Flagged dynamic string SQL formatting in routers/audit.py",
+      telemetry: semgrepFindings > 0 
+        ? `${semgrepFindings} SAST flaw(s) flagged by Semgrep engine.`
+        : fallbackEngaged 
+        ? "CLI tool missing on system PATH; skipped." 
+        : "Codebase scanned; 0 SAST flaws found.",
     },
     {
       name: "Gitleaks Secret Scanner",
       role: "Entropy & Secret Scanner",
       rulesRun: 8,
-      findings: 1,
-      status: "COMPLETED",
+      findings: gitleaksFindings,
+      status: fallbackEngaged ? "SKIPPED (CLI MISSING)" : "COMPLETED",
       icon: Key,
-      telemetry: "Identified hardcoded HMAC secret key in services/scanners.py",
+      telemetry: gitleaksFindings > 0 
+        ? `${gitleaksFindings} hardcoded credential(s) or API key(s) detected.`
+        : fallbackEngaged 
+        ? "CLI tool missing on system PATH; skipped." 
+        : "Entropy check clean; 0 secrets exposed.",
     },
     {
       name: "Trivy Container & Dependency Engine",
       role: "CVE Manifest Analyzer",
       rulesRun: 42,
-      findings: 0,
-      status: "COMPLETED",
+      findings: trivyFindings,
+      status: fallbackEngaged ? "SKIPPED (CLI MISSING)" : "COMPLETED",
       icon: PackageCheck,
-      telemetry: "42 package manifests scanned; 0 vulnerable dependencies found.",
+      telemetry: trivyFindings > 0 
+        ? `${trivyFindings} dependency CVE(s) identified in package manifests.`
+        : fallbackEngaged 
+        ? "CLI tool missing on system PATH; skipped." 
+        : "Dependencies scanned; 0 vulnerable packages found.",
     },
     {
       name: "Internal Heuristic Analyzer",
-      role: "Fallback AST Pattern Matching",
-      rulesRun: 3,
-      findings: 1,
+      role: "AST Pattern & Regex Security Scanner",
+      rulesRun: 12,
+      findings: heuristicFindings,
       status: "COMPLETED",
       icon: ShieldAlert,
-      telemetry: "Flagged unsafe subprocess execution in services/blue_team_agents.py",
+      telemetry: heuristicFindings > 0 
+        ? `Engaged: ${heuristicFindings} security flaw(s) identified in repository files.`
+        : fallbackEngaged 
+        ? "Engaged as primary analyzer; scan clean." 
+        : "In-process AST checks completed.",
     },
   ];
 
@@ -57,11 +83,20 @@ export default function MultiAgentScanningCard() {
           </div>
         </div>
         <span className="font-mono text-[10px] bg-lime/10 text-lime border border-lime/30 px-3 py-1 rounded-full uppercase tracking-wider font-bold">
-          4 Agents Active & Completed
+          {vulnerabilities.length > 0 ? `${vulnerabilities.length} Findings Discovered` : "Swarm Execution Complete"}
         </span>
       </div>
 
       <div className="p-6 space-y-4">
+        {fallbackEngaged && (
+          <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg text-[11px] text-amber-300 flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0 text-amber-400" />
+            <span>
+              CLI tools (semgrep, gitleaks, trivy) were not detected in system PATH. SentinelX automatically engaged its native in-process AST heuristic analyzer to scan your uploaded repository.
+            </span>
+          </div>
+        )}
+
         {agentScanners.map((agent, idx) => {
           const IconComp = agent.icon;
           const hasFindings = agent.findings > 0;
@@ -90,7 +125,7 @@ export default function MultiAgentScanningCard() {
                         : "bg-lime/20 text-lime border border-lime/30"
                     }`}
                   >
-                    {hasFindings ? `${agent.findings} Flaw Flagged` : "0 Vulnerabilities"}
+                    {hasFindings ? `${agent.findings} Flaw(s) Flagged` : "0 Vulnerabilities"}
                   </span>
                 </div>
               </div>
@@ -112,3 +147,4 @@ export default function MultiAgentScanningCard() {
     </div>
   );
 }
+

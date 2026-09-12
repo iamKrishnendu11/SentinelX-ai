@@ -5,6 +5,7 @@ import { X, Search, FolderPlus, RefreshCw, AlertCircle, Check } from "lucide-rea
 import { useGitHub } from "@/context/GitHubContext";
 import { GitHubRepository } from "@/types/github";
 import { GitHubIcon } from "@/components/icons/GitHubIcon";
+import { PrimaryButton, GhostButton, Tag } from "@/components/shared";
 
 interface AddProjectModalProps {
   isOpen: boolean;
@@ -68,99 +69,96 @@ export default function AddProjectModal({ isOpen, onClose }: AddProjectModalProp
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
-      <div className="w-full max-w-2xl bg-[#0D0F0D] border border-white/15 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/90 backdrop-blur-md animate-fadeIn">
+      <div className="w-full max-w-2xl bg-panel border border-white/10 shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
         {/* Modal Header */}
-        <div className="p-6 border-b border-white/10 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#050505] border border-[#B7FF00]/30 flex items-center justify-center text-[#B7FF00]">
+        <div className="p-6 border-b border-white/10 flex items-center justify-between bg-ink">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-panel border border-lime/30 flex items-center justify-center text-lime shadow-[0_0_15px_rgba(183,255,0,0.1)]">
               <FolderPlus className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-mono font-bold text-slate-100">
+              <Tag>GITHUB INTEGRATION</Tag>
+              <h3 className="text-xl font-display font-bold uppercase tracking-tight text-fog mt-1">
                 Add a Project
               </h3>
-              <p className="text-xs text-slate-400 font-sans">
-                Select a repository from your connected GitHub account (@{githubState.username}).
-              </p>
             </div>
           </div>
 
           <button
             onClick={onClose}
-            className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors cursor-pointer"
+            className="p-3 border border-white/10 bg-panel hover:bg-white/5 text-ash hover:text-white transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Search Bar */}
-        <div className="p-4 border-b border-white/10 bg-[#050505]/40">
-          <div className="relative">
-            <Search className="absolute left-3.5 top-3 w-4 h-4 text-slate-500" />
+        <div className="p-4 border-b border-white/10 bg-panel">
+          <div className="relative flex items-center">
+            <Search className="absolute left-4 w-4 h-4 text-ash" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search repositories..."
-              className="w-full bg-[#050505] border border-white/10 rounded-xl pl-10 pr-4 py-2 text-xs font-mono text-slate-200 placeholder-slate-500 focus:border-[#B7FF00] focus:outline-none transition-colors"
+              placeholder="SEARCH REPOSITORIES..."
+              className="w-full bg-ink border border-white/10 pl-12 pr-4 py-3 font-mono text-xs tracking-widest text-fog placeholder-ash focus:border-lime focus:outline-none transition-colors"
             />
           </div>
         </div>
 
         {/* Repository List */}
-        <div className="flex-1 p-6 overflow-y-auto space-y-3 custom-scrollbar">
+        <div className="flex-1 p-6 overflow-y-auto space-y-4 custom-scrollbar bg-ink">
           {loading ? (
-            <div className="py-12 text-center space-y-3">
-              <RefreshCw className="w-6 h-6 text-[#B7FF00] animate-spin mx-auto" />
-              <p className="text-xs font-mono text-slate-400">Fetching GitHub repositories...</p>
+            <div className="py-12 text-center flex flex-col items-center gap-4">
+              <RefreshCw className="w-8 h-8 text-lime animate-spin mx-auto" />
+              <p className="text-[10px] font-mono tracking-widest text-ash uppercase">Fetching Repositories...</p>
             </div>
           ) : error ? (
-            <div className="py-12 text-center space-y-4">
-              <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 mx-auto">
-                <AlertCircle className="w-6 h-6" />
+            <div className="py-12 text-center space-y-6">
+              <div className="w-16 h-16 bg-panel border border-amber-500/30 flex items-center justify-center text-amber-500 mx-auto">
+                <AlertCircle className="w-8 h-8" />
               </div>
-              <div className="max-w-md mx-auto space-y-1">
-                <p className="text-xs font-mono font-bold text-slate-300">{error}</p>
-                <p className="text-[11px] text-slate-500 font-sans">
+              <div className="max-w-md mx-auto space-y-2">
+                <p className="text-xs font-mono font-bold uppercase tracking-widest text-amber-400">{error}</p>
+                <p className="text-sm text-ash font-sans">
                   The backend GitHub repository endpoint (`GET /api/github/repositories`) will return your repositories when configured.
                 </p>
               </div>
-              <button
-                onClick={fetchRepos}
-                className="px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/15 text-slate-300 font-mono text-xs font-semibold transition-all inline-flex items-center gap-2 cursor-pointer"
-              >
-                <RefreshCw className="w-3.5 h-3.5" />
-                <span>Retry</span>
-              </button>
+              <GhostButton onClick={fetchRepos}>
+                <div className="flex items-center gap-2">
+                  <RefreshCw className="w-4 h-4" />
+                  RETRY CONNECTION
+                </div>
+              </GhostButton>
             </div>
           ) : filteredRepos.length === 0 ? (
-            <div className="py-12 text-center space-y-3">
-              <GitHubIcon className="w-8 h-8 text-slate-600 mx-auto" />
-              <p className="text-xs font-mono text-slate-400">
-                {search ? "No repositories match your search." : "No repositories found on this GitHub account."}
+            <div className="py-12 text-center space-y-4">
+              <GitHubIcon className="w-10 h-10 text-ash mx-auto" />
+              <p className="text-[10px] font-mono tracking-widest text-ash uppercase">
+                {search ? "NO REPOSITORIES MATCH SEARCH." : "NO REPOSITORIES FOUND."}
               </p>
             </div>
           ) : (
             filteredRepos.map((repo) => (
               <div
                 key={repo.id}
-                className="p-4 rounded-xl bg-[#050505] border border-white/10 hover:border-white/20 flex items-center justify-between transition-all"
+                className="p-5 bg-panel border border-white/10 hover:border-lime/30 flex items-center justify-between transition-colors group"
               >
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-mono font-bold text-slate-200">
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-3">
+                    <span className="text-base font-mono font-bold text-fog uppercase">
                       {repo.name}
                     </span>
-                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/5 text-slate-400">
-                      {repo.private ? "Private" : "Public"}
+                    <span className="text-[9px] font-mono tracking-widest px-2 py-0.5 border border-white/10 bg-ink text-ash uppercase">
+                      {repo.private ? "PRIVATE" : "PUBLIC"}
                     </span>
-                    <span className="text-[10px] font-mono text-slate-500">
+                    <span className="text-[9px] font-mono tracking-widest text-ash uppercase">
                       {repo.defaultBranch}
                     </span>
                   </div>
                   {repo.description && (
-                    <p className="text-xs text-slate-400 font-sans line-clamp-1">
+                    <p className="text-xs text-slate-500 font-sans line-clamp-1">
                       {repo.description}
                     </p>
                   )}
@@ -169,10 +167,10 @@ export default function AddProjectModal({ isOpen, onClose }: AddProjectModalProp
                 <button
                   onClick={() => handleConnectRepo(repo)}
                   disabled={connectingRepoId === repo.id}
-                  className="px-3.5 py-1.5 rounded-lg bg-[#B7FF00]/10 hover:bg-[#B7FF00]/20 border border-[#B7FF00]/30 text-[#B7FF00] font-mono text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  className="px-4 py-2 border border-lime/30 text-lime font-mono text-[10px] tracking-widest font-bold uppercase transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-50 hover:bg-lime hover:text-ink shrink-0"
                 >
                   <Check className="w-3.5 h-3.5" />
-                  <span>{connectingRepoId === repo.id ? "Connecting..." : "Connect Project"}</span>
+                  <span>{connectingRepoId === repo.id ? "CONNECTING..." : "CONNECT"}</span>
                 </button>
               </div>
             ))
@@ -180,13 +178,13 @@ export default function AddProjectModal({ isOpen, onClose }: AddProjectModalProp
         </div>
 
         {/* Modal Footer */}
-        <div className="p-4 border-t border-white/10 bg-[#050505]/60 flex items-center justify-between text-xs font-mono text-slate-500">
-          <span>Connected GitHub: @{githubState.username || "user"}</span>
+        <div className="p-5 border-t border-white/10 bg-ink flex items-center justify-between text-[10px] tracking-widest uppercase font-mono text-ash">
+          <span>GITHUB: @{githubState.username || "USER"}</span>
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-mono font-semibold transition-colors cursor-pointer"
+            className="text-ash hover:text-fog transition-colors cursor-pointer"
           >
-            Cancel
+            CANCEL
           </button>
         </div>
       </div>

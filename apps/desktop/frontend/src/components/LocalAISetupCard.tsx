@@ -16,6 +16,7 @@ import {
   Lock,
 } from "lucide-react";
 import { useLocalAI } from "@/context/LocalAIContext";
+import { PrimaryButton, GhostButton } from "@/components/shared";
 
 export default function LocalAISetupCard() {
   const { aiStatus, isChecking, checkEnvironment } = useLocalAI();
@@ -31,48 +32,49 @@ export default function LocalAISetupCard() {
 
   if (aiStatus.ready) {
     return (
-      <div className="rounded-xl bg-[#0D0F0D] border border-emerald-500/30 p-6 shadow-[0_0_20px_rgba(16,185,129,0.05)]">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
+      <div className="h-full flex flex-col justify-center p-6 md:p-8 bg-panel group hover:bg-white/[0.02] transition-colors relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-[500px] h-full bg-gradient-to-l from-emerald-500/[0.03] to-transparent pointer-events-none" />
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+          <div className="flex items-start gap-5">
+            <div className="w-12 h-12 bg-ink border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
               <ShieldCheck className="w-6 h-6" />
             </div>
 
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-base font-mono font-bold text-slate-100">
-                  AI Engine Ready
+            <div className="space-y-1.5 mt-0.5">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 md:gap-3">
+                <h3 className="text-[10px] font-mono tracking-[0.25em] uppercase text-fog">
+                  AI ENGINE STATUS
                 </h3>
-                <span className="px-2 py-0.5 rounded text-[10px] font-mono uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">
-                  Operational
+                <span className="px-2 py-0.5 text-[9px] font-mono uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/40 tracking-widest flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 bg-emerald-400 shadow-[0_0_8px_#34d399]" />
+                  OPERATIONAL
                 </span>
               </div>
-              <p className="text-xs text-slate-400 font-sans mt-1">
-                Local Ollama engine and <code className="text-[#B7FF00] font-mono">{aiStatus.qwenModel}</code> model verified. Scans & Vulnerabilities unlocked.
+              <p className="text-sm text-ash font-sans mt-1">
+                Local Ollama engine and <code className="text-lime font-mono">{aiStatus.qwenModel}</code> verified.
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-4 border-t md:border-t-0 pt-3 md:pt-0 border-white/10 shrink-0">
-            <div className="flex items-center gap-3 text-xs font-mono">
+          <div className="flex items-center gap-4 shrink-0">
+            <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-widest">
               <span className="flex items-center gap-1.5 text-emerald-400">
-                <CheckCircle2 className="w-4 h-4" />
-                Ollama ✓
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                OLLAMA ✓
               </span>
               <span className="flex items-center gap-1.5 text-emerald-400">
-                <CheckCircle2 className="w-4 h-4" />
-                Qwen 2.5 Coder 7B ✓
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                QWEN 7B ✓
               </span>
             </div>
 
             <button
               onClick={() => checkEnvironment()}
               disabled={isChecking}
-              className="px-3 py-1.5 rounded-lg bg-[#050505] border border-white/10 hover:border-white/20 text-slate-300 hover:text-white text-xs font-mono flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
-              title="Re-verify Local AI Environment"
+              className="p-3 border border-white/10 text-ash hover:text-white hover:border-white/30 transition-colors bg-ink disabled:opacity-50"
+              title="Re-verify Environment"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${isChecking ? "animate-spin text-[#B7FF00]" : ""}`} />
-              <span>{isChecking ? "Checking..." : "Re-check"}</span>
+              <RefreshCw className={`w-4 h-4 ${isChecking ? "animate-spin text-lime" : ""}`} />
             </button>
           </div>
         </div>
@@ -81,52 +83,56 @@ export default function LocalAISetupCard() {
   }
 
   return (
-    <div className="rounded-xl bg-[#0D0F0D] border border-amber-500/30 p-6 space-y-6 shadow-[0_0_25px_rgba(245,158,11,0.05)]">
+    <div className="h-full flex flex-col p-6 md:p-8 bg-panel relative overflow-hidden group hover:bg-white/[0.02] transition-colors">
+      <div className="absolute top-0 right-0 w-[500px] h-full bg-gradient-to-l from-amber-500/[0.03] to-transparent pointer-events-none" />
+      
       {/* Header Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/10 pb-5">
-        <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-white/10 pb-6 relative z-10">
+        <div className="flex items-start gap-5">
+          <div className="w-12 h-12 bg-ink border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
             <Bot className="w-6 h-6" />
           </div>
 
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-base font-mono font-bold text-slate-100">
-                Local AI Environment Setup Required
+          <div className="space-y-1.5 mt-0.5">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 md:gap-3">
+              <h3 className="text-[10px] font-mono tracking-[0.25em] uppercase text-fog">
+                AI ENVIRONMENT SETUP
               </h3>
-              <span className="px-2 py-0.5 rounded text-[10px] font-mono uppercase bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center gap-1">
+              <span className="px-2 py-0.5 text-[9px] font-mono uppercase bg-amber-500/10 text-amber-400 border border-amber-500/40 flex items-center gap-1 tracking-widest">
                 <Lock className="w-2.5 h-2.5" />
-                Scans Locked
+                SCANS LOCKED
               </span>
             </div>
-            <p className="text-xs text-slate-300 font-sans mt-1">
-              Sentinel-X requires a local AI engine before security scans can run. All code analysis remains strictly offline on your machine.
+            <p className="text-sm text-ash font-sans mt-1">
+              Sentinel-X requires a local AI engine. Code analysis remains strictly offline.
             </p>
           </div>
         </div>
 
-        <button
+        <PrimaryButton
           onClick={() => checkEnvironment()}
           disabled={isChecking}
-          className="px-4 py-2 rounded-lg bg-[#B7FF00] text-[#050505] font-mono text-xs font-bold uppercase tracking-wider hover:bg-[#cfff4d] transition-all flex items-center gap-2 cursor-pointer shadow-[0_0_15px_rgba(183,255,0,0.2)] shrink-0 self-start md:self-auto disabled:opacity-60"
+          className="shrink-0"
         >
-          <RefreshCw className={`w-4 h-4 ${isChecking ? "animate-spin" : ""}`} />
-          <span>{isChecking ? "Checking Environment..." : "Check AI Environment"}</span>
-        </button>
+          <div className="flex items-center gap-2">
+            <RefreshCw className={`w-4 h-4 ${isChecking ? "animate-spin" : ""}`} />
+            {isChecking ? "CHECKING..." : "CHECK AI"}
+          </div>
+        </PrimaryButton>
       </div>
 
       {/* Component Status Overview Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-white/10 border border-white/10 mt-6">
         {/* Ollama Status */}
-        <div className={`p-3.5 rounded-lg border font-mono text-xs ${
+        <div className={`p-4 font-mono text-[10px] tracking-widest uppercase ${
           aiStatus.ollamaRunning
-            ? "bg-emerald-500/5 border-emerald-500/30 text-emerald-300"
+            ? "bg-emerald-500/10 text-emerald-300"
             : aiStatus.ollamaInstalled
-            ? "bg-amber-500/5 border-amber-500/30 text-amber-300"
-            : "bg-red-500/5 border-red-500/30 text-red-300"
+            ? "bg-amber-500/10 text-amber-300"
+            : "bg-red-500/10 text-red-300"
         }`}>
-          <div className="flex items-center justify-between mb-1">
-            <span className="font-semibold text-slate-200">Ollama Engine</span>
+          <div className="flex items-center justify-between mb-2">
+            <span className="font-bold text-fog">OLLAMA ENGINE</span>
             {aiStatus.ollamaRunning ? (
               <CheckCircle2 className="w-4 h-4 text-emerald-400" />
             ) : aiStatus.ollamaInstalled ? (
@@ -135,122 +141,116 @@ export default function LocalAISetupCard() {
               <XCircle className="w-4 h-4 text-red-400" />
             )}
           </div>
-          <div className="text-[11px] text-slate-400">
+          <div className="text-[9px] text-ash tracking-widest">
             {aiStatus.ollamaRunning
-              ? "Running (http://localhost:11434)"
+              ? "RUNNING (PORT:11434)"
               : aiStatus.ollamaInstalled
-              ? "Installed (Not Running)"
-              : "Not Installed"}
+              ? "INSTALLED (NOT RUNNING)"
+              : "NOT INSTALLED"}
           </div>
         </div>
 
         {/* Model Status */}
-        <div className={`p-3.5 rounded-lg border font-mono text-xs ${
+        <div className={`p-4 font-mono text-[10px] tracking-widest uppercase ${
           aiStatus.qwenInstalled
-            ? "bg-emerald-500/5 border-emerald-500/30 text-emerald-300"
-            : "bg-amber-500/5 border-amber-500/30 text-amber-300"
+            ? "bg-emerald-500/10 text-emerald-300"
+            : "bg-amber-500/10 text-amber-300"
         }`}>
-          <div className="flex items-center justify-between mb-1">
-            <span className="font-semibold text-slate-200">Qwen 2.5 Coder 7B</span>
+          <div className="flex items-center justify-between mb-2">
+            <span className="font-bold text-fog">QWEN 7B CODER</span>
             {aiStatus.qwenInstalled ? (
               <CheckCircle2 className="w-4 h-4 text-emerald-400" />
             ) : (
               <XCircle className="w-4 h-4 text-red-400" />
             )}
           </div>
-          <div className="text-[11px] text-slate-400">
-            {aiStatus.qwenInstalled ? "Installed locally" : "Model missing"}
+          <div className="text-[9px] text-ash tracking-widest">
+            {aiStatus.qwenInstalled ? "INSTALLED LOCALLY" : "MODEL MISSING"}
           </div>
         </div>
 
         {/* Usability / Status */}
-        <div className={`p-3.5 rounded-lg border font-mono text-xs ${
+        <div className={`p-4 font-mono text-[10px] tracking-widest uppercase ${
           aiStatus.ready
-            ? "bg-emerald-500/5 border-emerald-500/30 text-emerald-300"
-            : "bg-red-500/5 border-red-500/30 text-red-300"
+            ? "bg-emerald-500/10 text-emerald-300"
+            : "bg-red-500/10 text-red-300"
         }`}>
-          <div className="flex items-center justify-between mb-1">
-            <span className="font-semibold text-slate-200">AI Engine Communication</span>
+          <div className="flex items-center justify-between mb-2">
+            <span className="font-bold text-fog">API LINK</span>
             {aiStatus.ready ? (
               <CheckCircle2 className="w-4 h-4 text-emerald-400" />
             ) : (
               <XCircle className="w-4 h-4 text-red-400" />
             )}
           </div>
-          <div className="text-[11px] text-slate-400">
-            {aiStatus.qwenUsable ? "Operational" : "Not Usable"}
+          <div className="text-[9px] text-ash tracking-widest">
+            {aiStatus.qwenUsable ? "OPERATIONAL" : "NOT USABLE"}
           </div>
         </div>
       </div>
 
       {/* Actionable Setup Instructions based on specific missing piece */}
-      <div className="bg-[#050505] border border-white/10 rounded-lg p-4 space-y-3">
+      <div className="bg-ink border border-white/10 p-5 mt-6 space-y-4">
         {!aiStatus.ollamaInstalled && !aiStatus.ollamaRunning && (
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 text-sm font-mono font-bold text-slate-200">
-              <span className="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center justify-center text-xs">
+          <div className="space-y-4">
+            <div className="flex items-center gap-3 text-xs font-mono font-bold text-fog uppercase tracking-widest">
+              <span className="w-6 h-6 bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center justify-center">
                 1
               </span>
               <span>Install Ollama</span>
             </div>
-            <p className="text-xs text-slate-400 font-sans pl-8">
+            <p className="text-sm text-ash font-sans pl-9">
               Ollama is required to host open-source security models locally on your device without sending code to the cloud.
             </p>
-            <div className="pl-8">
-              <a
-                href="https://ollama.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-slate-100 font-mono text-xs font-medium transition-all"
-              >
-                <span>Install Ollama</span>
-                <ExternalLink className="w-3.5 h-3.5 text-[#B7FF00]" />
-              </a>
+            <div className="pl-9">
+              <GhostButton href="https://ollama.com" testId="btn-install-ollama">
+                INSTALL OLLAMA <ExternalLink className="w-3.5 h-3.5 text-lime" />
+              </GhostButton>
             </div>
           </div>
         )}
 
         {aiStatus.ollamaInstalled && !aiStatus.ollamaRunning && (
           <div className="space-y-3">
-            <div className="flex items-center gap-2 text-sm font-mono font-bold text-amber-400">
+            <div className="flex items-center gap-3 text-xs font-mono font-bold text-amber-400 uppercase tracking-widest">
               <AlertTriangle className="w-5 h-5 text-amber-400" />
-              <span>Ollama is installed but is not currently running.</span>
+              <span>Ollama is installed but not running.</span>
             </div>
-            <p className="text-xs text-slate-400 font-sans pl-7">
-              Please start the Ollama application on your computer or run <code className="text-[#B7FF00] font-mono bg-white/5 px-1.5 py-0.5 rounded">ollama serve</code> in your terminal.
+            <p className="text-sm text-ash font-sans pl-8">
+              Please start the Ollama application on your computer or run <code className="text-lime font-mono bg-white/5 px-2 py-1">ollama serve</code> in your terminal.
             </p>
           </div>
         )}
 
         {aiStatus.ollamaRunning && !aiStatus.qwenInstalled && (
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 text-sm font-mono font-bold text-slate-200">
-              <span className="w-6 h-6 rounded-full bg-[#B7FF00]/20 text-[#B7FF00] border border-[#B7FF00]/40 flex items-center justify-center text-xs">
+          <div className="space-y-4">
+            <div className="flex items-center gap-3 text-xs font-mono font-bold text-fog uppercase tracking-widest">
+              <span className="w-6 h-6 bg-lime/20 text-lime border border-lime/40 flex items-center justify-center">
                 2
               </span>
               <span>Install Qwen 2.5 Coder 7B</span>
             </div>
-            <p className="text-xs text-slate-400 font-sans pl-8">
+            <p className="text-sm text-ash font-sans pl-9">
               Run the following command in your terminal to pull the specialized code security model into local Ollama:
             </p>
-            <div className="pl-8 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-              <div className="flex-1 bg-[#090B09] border border-white/10 rounded-lg px-3.5 py-2 font-mono text-xs text-[#B7FF00] flex items-center gap-2">
-                <Terminal className="w-4 h-4 text-slate-400 shrink-0" />
+            <div className="pl-9 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+              <div className="flex-1 bg-panel border border-white/10 px-4 py-3 font-mono text-sm text-lime flex items-center gap-3">
+                <Terminal className="w-4 h-4 text-slate-500 shrink-0" />
                 <span className="select-all">{pullCommand}</span>
               </div>
               <button
                 onClick={handleCopyCommand}
-                className="px-3.5 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-slate-200 font-mono text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer shrink-0"
+                className="px-5 py-3 border border-white/10 text-fog font-mono text-[10px] tracking-widest uppercase hover:border-lime hover:text-lime transition-colors flex items-center justify-center gap-2"
               >
                 {copied ? (
                   <>
-                    <Check className="w-3.5 h-3.5 text-emerald-400" />
-                    <span className="text-emerald-400 font-semibold">Copied!</span>
+                    <Check className="w-4 h-4 text-lime" />
+                    <span className="text-lime">COPIED</span>
                   </>
                 ) : (
                   <>
-                    <Copy className="w-3.5 h-3.5 text-slate-300" />
-                    <span>Copy Command</span>
+                    <Copy className="w-4 h-4 text-ash" />
+                    <span>COPY COMMAND</span>
                   </>
                 )}
               </button>
@@ -260,32 +260,21 @@ export default function LocalAISetupCard() {
 
         {aiStatus.ollamaRunning && aiStatus.qwenInstalled && !aiStatus.qwenUsable && (
           <div className="space-y-3">
-            <div className="flex items-center gap-2 text-sm font-mono font-bold text-red-400">
+            <div className="flex items-center gap-3 text-xs font-mono font-bold text-red-400 uppercase tracking-widest">
               <XCircle className="w-5 h-5" />
-              <span>Qwen is installed but Sentinel-X could not communicate with it.</span>
+              <span>Qwen is installed but communication failed.</span>
             </div>
-            <p className="text-xs text-slate-400 font-sans pl-7">
+            <p className="text-sm text-ash font-sans pl-8">
               The model failed the test prompt execution. Ensure Ollama has enough system memory available and try checking again.
             </p>
           </div>
         )}
-
-        {/* Footer Check Again Trigger */}
-        <div className="pt-2 flex items-center justify-between text-xs font-mono text-slate-400 border-t border-white/5">
-          <div className="flex items-center gap-2">
-            <Cpu className="w-3.5 h-3.5 text-[#B7FF00]" />
-            <span>Strict Privacy: Source code is never transmitted outside localhost.</span>
-          </div>
-
-          <button
-            onClick={() => checkEnvironment()}
-            disabled={isChecking}
-            className="text-xs text-[#B7FF00] hover:underline font-mono flex items-center gap-1 cursor-pointer disabled:opacity-50"
-          >
-            <RefreshCw className={`w-3 h-3 ${isChecking ? "animate-spin" : ""}`} />
-            <span>Check Again</span>
-          </button>
-        </div>
+      </div>
+      
+      {/* Footer Info */}
+      <div className="mt-6 flex items-center gap-3 text-[10px] font-mono text-ash uppercase tracking-widest">
+        <Cpu className="w-4 h-4 text-lime" />
+        <span>Strict Privacy: Source code is never transmitted outside localhost.</span>
       </div>
     </div>
   );

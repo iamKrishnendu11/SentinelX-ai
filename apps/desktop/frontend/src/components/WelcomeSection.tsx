@@ -1,9 +1,10 @@
 "use client";
 
-import { Shield, Play, Plus, Info } from "lucide-react";
+import { Play, Plus, Info } from "lucide-react";
 import { useState } from "react";
 import Link from "next/link";
 import { useGitHub } from "@/context/GitHubContext";
+import { PrimaryButton, GhostButton, Reveal, Tag } from "@/components/shared";
 import { GitHubIcon } from "@/components/icons/GitHubIcon";
 
 export default function WelcomeSection() {
@@ -16,85 +17,57 @@ export default function WelcomeSection() {
   };
 
   return (
-    <section className="relative overflow-hidden rounded-xl bg-gradient-to-r from-[#0D0F0D] via-[#050505] to-[#0D0F0D] border border-white/10 p-6 md:p-8 shadow-xl">
-      {/* Background Decorative Grid */}
-      <div className="absolute inset-0 bg-grid opacity-30 pointer-events-none" />
-      <div className="absolute -right-20 -bottom-20 w-80 h-80 bg-[#B7FF00]/5 rounded-full blur-3xl pointer-events-none" />
+    <section className="relative w-full">
+      <Reveal>
+        <Tag>{githubState.connected ? "LOCAL SECURITY WORKSPACE" : "AUTHENTICATION REQUIRED"}</Tag>
+        <h2 className="font-display font-bold uppercase tracking-tight leading-[0.95] text-4xl md:text-6xl mt-6">
+          {githubState.connected ? "Welcome to" : "Connect your"}{" "}
+          <span className="text-lime">{githubState.connected ? "Sentinel-X" : "GitHub account"}</span>
+        </h2>
+        <p className="text-ash text-base md:text-lg mt-6 max-w-2xl leading-relaxed">
+          {githubState.connected 
+            ? "Your autonomous DevSecOps workspace for analyzing, securing, and predicting application vulnerabilities without risking production." 
+            : "Connect GitHub to import repositories and start local autonomous security analysis. Your GitHub account is required to access the swarm."}
+        </p>
+      </Reveal>
 
-      <div className="relative z-10 max-w-3xl space-y-4">
-        {/* Connection status pill */}
-        {githubState.connected ? (
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#B7FF00]/10 border border-[#B7FF00]/30 text-[#B7FF00] text-xs font-mono">
-            <Shield className="w-3.5 h-3.5" />
-            <span>Local Security Workspace</span>
-          </div>
-        ) : (
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-mono">
-            <GitHubIcon className="w-3.5 h-3.5" />
-            <span>GitHub Connection Required</span>
-          </div>
-        )}
-
-        {!githubState.connected ? (
-          /* GitHub Not Connected State */
-          <>
-            <h2 className="text-2xl md:text-3xl font-extrabold text-slate-100 tracking-tight font-display">
-              Connect your GitHub account
-            </h2>
-
-            <p className="text-sm md:text-base text-slate-400 font-sans leading-relaxed max-w-2xl">
-              Connect GitHub to add repositories and start securing your code. Your GitHub account is required to add projects to Sentinel-X.
-            </p>
-
-            <div className="pt-2 flex flex-wrap items-center gap-3">
-              <button
-                onClick={connectGitHub}
-                className="px-6 py-3 rounded-lg bg-[#B7FF00] text-[#050505] font-mono text-xs font-bold uppercase tracking-wider hover:bg-[#cfff4d] transition-all shadow-[0_0_20px_rgba(183,255,0,0.2)] flex items-center gap-2 cursor-pointer"
-              >
+      <Reveal delay={0.15}>
+        <div className="mt-8 flex flex-wrap items-center gap-4">
+          {!githubState.connected ? (
+            <PrimaryButton testId="btn-connect" onClick={connectGitHub}>
+              <div className="flex items-center gap-2">
                 <GitHubIcon className="w-4 h-4" />
-                <span>Connect GitHub</span>
-              </button>
-            </div>
-          </>
-        ) : (
-          /* GitHub Connected State */
-          <>
-            <h2 className="text-2xl md:text-3xl font-extrabold text-slate-100 tracking-tight font-display">
-              Welcome to Sentinel-X
-            </h2>
+                CONNECT GITHUB
+              </div>
+            </PrimaryButton>
+          ) : (
+            <>
+              <PrimaryButton testId="btn-scan" onClick={() => showNotice("Project Scan")}>
+                <div className="flex items-center gap-2">
+                  <Play className="w-4 h-4 fill-current" />
+                  SCAN PROJECT
+                </div>
+              </PrimaryButton>
 
-            <p className="text-sm md:text-base text-slate-400 font-sans leading-relaxed max-w-2xl">
-              Your local security workspace for analyzing, securing, and improving your code.
-            </p>
-
-            <div className="pt-2 flex flex-wrap items-center gap-3">
-              <button
-                onClick={() => showNotice("Project Scan")}
-                className="px-5 py-2.5 rounded-lg bg-[#B7FF00] text-[#050505] font-mono text-xs font-bold hover:bg-[#cfff4d] transition-all shadow-[0_0_20px_rgba(183,255,0,0.2)] flex items-center gap-2 cursor-pointer"
-              >
-                <Play className="w-4 h-4 fill-current" />
-                <span>Scan a Project</span>
-              </button>
-
-              <Link
-                href="/projects"
-                className="px-5 py-2.5 rounded-lg bg-white/[0.05] border border-white/15 text-slate-200 font-mono text-xs font-semibold hover:bg-white/10 hover:border-white/25 transition-all flex items-center gap-2"
-              >
-                <Plus className="w-4 h-4 text-[#B7FF00]" />
-                <span>Add Project</span>
+              <Link href="/projects" className="inline-block">
+                <GhostButton testId="btn-add">
+                  <div className="flex items-center gap-2">
+                    <Plus className="w-4 h-4 text-lime" />
+                    ADD PROJECT
+                  </div>
+                </GhostButton>
               </Link>
-            </div>
-          </>
-        )}
+            </>
+          )}
+        </div>
 
-        {/* Action Notice Toast */}
         {notice && (
-          <div className="mt-3 p-3 rounded-lg bg-[#050505] border border-[#B7FF00]/40 text-[#B7FF00] text-xs font-mono flex items-start gap-2.5 animate-fadeIn">
-            <Info className="w-4 h-4 shrink-0 mt-0.5" />
+          <div className="mt-6 p-4 bg-panel border border-lime/40 text-lime text-xs font-mono tracking-widest uppercase flex items-center gap-3 w-fit animate-fadeIn">
+            <Info className="w-4 h-4 shrink-0" />
             <span>{notice}</span>
           </div>
         )}
-      </div>
+      </Reveal>
     </section>
   );
 }

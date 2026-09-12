@@ -73,45 +73,80 @@ export async function fetchTestStatus(projectId: string): Promise<TestSession | 
   }
 }
 
-export function subscribeToAuditEvents(
-  repoUrl: string,
-  branch: string = "main",
-  onEvent: (event: { event: string; message?: string; data?: any }) => void,
-  onError?: (err: any) => void
-): () => void {
+export function startRealAuditStream(repoUrl: string, branch: string, onEvent: (event: any) => void, onError: (err: any) => void, onComplete: () => void): EventSource {
   const url = `${PYTHON_API_URL}/api/v1/audit/scan/stream?repo_url=${encodeURIComponent(repoUrl)}&branch=${encodeURIComponent(branch)}`;
   const eventSource = new EventSource(url);
 
   eventSource.onmessage = (e) => {
     try {
-      const parsed = JSON.parse(e.data);
-      onEvent(parsed);
+      const data = JSON.parse(e.data);
+      if (data.event === "REPORT_READY") {
+        onEvent(data);
+        eventSource.close();
+        onComplete();
+      } else {
+        onEvent(data);
+      }
     } catch (err) {
-      console.error("Error parsing SSE event:", err);
+      console.error("Failed to parse SSE JSON:", err);
     }
   };
-
-  const handleCustomEvent = (eventName: string) => (e: MessageEvent) => {
-    try {
-      const parsed = JSON.parse(e.data);
-      onEvent({ ...parsed, event: eventName });
-    } catch (err) {
-      console.error(`Error parsing SSE ${eventName} event:`, err);
-    }
-  };
-
-  eventSource.addEventListener("RECON_STARTED", handleCustomEvent("RECON_STARTED"));
-  eventSource.addEventListener("SCANNERS_RUNNING", handleCustomEvent("SCANNERS_RUNNING"));
-  eventSource.addEventListener("HEURISTIC_FALLBACK_ENGAGED", handleCustomEvent("HEURISTIC_FALLBACK_ENGAGED"));
-  eventSource.addEventListener("AI_TRIAGE_ACTIVE", handleCustomEvent("AI_TRIAGE_ACTIVE"));
-  eventSource.addEventListener("REPORT_READY", handleCustomEvent("REPORT_READY"));
 
   eventSource.onerror = (err) => {
-    if (onError) onError(err);
+    onError(err);
     eventSource.close();
   };
 
-  return () => {
-    eventSource.close();
-  };
+  return eventSource;
+}
+
+export async function startRealRemediationStream(findings: any[], repoPath: string, onEvent: (event: any) => void) {
+  const url = `${PYTHON_API_URL}/api/v1/remediation/stream`;
+  
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        findings,
+        repo_path: repoPath,
+        auto_apply: false,
+        create_git_branch: false,
+        branch_name: "sentinelx/security-patches"
+      }),
+    });
+
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    if (!response.body) throw new Error("No response body");
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n\n");
+      buffer = lines.pop() || "";
+
+      for (const chunk of lines) {
+        if (!chunk.trim()) continue;
+        const dataLine = chunk.split("\n").find(l => l.startsWith("data: "));
+        if (dataLine) {
+          try {
+            const dataStr = dataLine.replace("data: ", "");
+            const parsed = JSON.parse(dataStr);
+            onEvent(parsed);
+          } catch (e) {
+            console.error("Failed parsing stream chunk", e);
+          }
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Remediation stream error:", error);
+    throw error;
+  }
 }

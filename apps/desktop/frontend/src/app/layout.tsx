@@ -15,8 +15,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className="bg-[#050505] text-[#F4F4F0] antialiased selection:bg-[#B7FF00] selection:text-[#050505]">
+    <html lang="en" suppressHydrationWarning>
+      <body suppressHydrationWarning className="bg-[#050505] text-[#F4F4F0] antialiased selection:bg-[#B7FF00] selection:text-[#050505]">
         <GitHubProvider>
           <LocalAIProvider>{children}</LocalAIProvider>
         </GitHubProvider>

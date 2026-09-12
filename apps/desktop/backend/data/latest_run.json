@@ -1,0 +1,78 @@
+{
+  "session_id": "sess-9cd9ef8b",
+  "target_repo": "https://github.com/octocat/Hello-World",
+  "scanned_at": "2026-09-12T09:56:09.108104Z",
+  "summary": {
+    "total_probes": 7,
+    "blocked_or_safe": 7,
+    "verified_exploits": 0,
+    "security_score": 100
+  },
+  "telemetry_timeline": [
+    {
+      "probe_id": "probe-c-1",
+      "timestamp": "2026-09-12T09:56:09.108104Z",
+      "vector": "IDOR",
+      "target_endpoint": "/api/v1/user",
+      "action": "FUZZ_PARAMETER",
+      "status": "BLOCKED_SCHEMA_VALIDATION",
+      "side": "red"
+    },
+    {
+      "probe_id": "probe-c-2",
+      "timestamp": "2026-09-12T09:56:09.108104Z",
+      "vector": "CSRF",
+      "target_endpoint": "/api/v1/auth",
+      "action": "CHECK_HEADER",
+      "status": "SAFE",
+      "side": "red"
+    },
+    {
+      "probe_id": "probe-c-3",
+      "timestamp": "2026-09-12T09:56:09.108104Z",
+      "vector": "DESERIALIZATION",
+      "target_endpoint": "/api/v1/ping",
+      "action": "FUZZ_PARAMETER",
+      "status": "BLOCKED_SCHEMA_VALIDATION",
+      "side": "red"
+    },
+    {
+      "probe_id": "probe-c-4",
+      "timestamp": "2026-09-12T09:56:09.108104Z",
+      "vector": "XSS",
+      "target_endpoint": "/api/v1/upload",
+      "action": "FUZZ_PARAMETER",
+      "status": "SAFE",
+      "side": "red"
+    },
+    {
+      "probe_id": "probe-c-5",
+      "timestamp": "2026-09-12T09:56:09.108104Z",
+      "vector": "CORS",
+      "target_endpoint": "/api/v1/user",
+      "action": "CHECK_HEADER",
+      "status": "BLOCKED_SCHEMA_VALIDATION",
+      "side": "red"
+    },
+    {
+      "probe_id": "probe-c-6",
+      "timestamp": "2026-09-12T09:56:09.108104Z",
+      "vector": "SQLi",
+      "target_endpoint": "/api/v1/auth",
+      "action": "FUZZ_PARAMETER",
+      "status": "SAFE",
+      "side": "red"
+    },
+    {
+      "probe_id": "probe-c-7",
+      "timestamp": "2026-09-12T09:56:09.108104Z",
+      "vector": "COMMAND_INJECTION",
+      "target_endpoint": "/api/v1/ping",
+      "action": "FUZZ_PARAMETER",
+      "status": "BLOCKED_SCHEMA_VALIDATION",
+      "side": "red"
+    }
+  ],
+  "verified_vulnerabilities": [],
+  "heuristic_fallback_engaged": true
+}

@@ -22,4 +22,5 @@ class SecurityAuditReport(BaseModel):
     tech_stack: dict[str, Any] = Field(default_factory=dict)
     total_raw_findings: int = 0
     verified_vulnerabilities: list[VulnerabilityFinding] = Field(default_factory=list)
+    heuristic_fallback_engaged: bool = False
     scan_duration_sec: float = 0.0

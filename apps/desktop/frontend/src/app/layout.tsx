@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { GitHubProvider } from "@/context/GitHubContext";
 
 export const metadata: Metadata = {
   title: "Sentinel-X Desktop | Local Security Workspace",
@@ -15,7 +16,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="bg-[#050505] text-[#F4F4F0] antialiased selection:bg-[#B7FF00] selection:text-[#050505]">
-        {children}
+        <GitHubProvider>{children}</GitHubProvider>
       </body>
     </html>
   );

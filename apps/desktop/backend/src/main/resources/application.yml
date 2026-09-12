@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: desktop-backend
+
+  datasource:
+    url: jdbc:sqlite:${DB_PATH:data/sentinel-x.db}
+    driver-class-name: org.sqlite.JDBC
+
+  jpa:
+    database-platform: org.hibernate.community.dialect.SQLiteDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+
+server:
+  port: 8081
+
+github:
+  client-id: ${GITHUB_CLIENT_ID:Ov23liD5WoPeTQHmdrp7}
+  client-secret: ${GITHUB_CLIENT_SECRET:3cd87b9848c48314df0f3a15d6b24492b6700522}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info
+

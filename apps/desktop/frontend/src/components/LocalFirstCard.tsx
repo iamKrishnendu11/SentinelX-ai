@@ -19,12 +19,12 @@ export default function LocalFirstCard() {
             </h4>
             <span className="px-2 py-0.5 rounded text-[9px] font-mono uppercase bg-[#B7FF00]/15 text-[#B7FF00] border border-[#B7FF00]/30 flex items-center gap-1">
               <Laptop className="w-3 h-3" />
-              100% Privacy
+              Local Analysis
             </span>
           </div>
 
           <p className="text-xs text-slate-400 font-sans leading-relaxed">
-            Sentinel-X is designed to perform security analysis locally on your machine. Your source code does not need to be uploaded to the Sentinel-X cloud.
+            Sentinel-X is designed to perform security analysis locally on your machine. GitHub is used to authenticate and access repositories, while actual security scans execute offline on your device.
           </p>
         </div>
       </div>

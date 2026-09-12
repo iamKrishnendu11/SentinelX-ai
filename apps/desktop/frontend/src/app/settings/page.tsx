@@ -1,6 +1,9 @@
+"use client";
+
 import DesktopSidebar from "@/components/DesktopSidebar";
 import DesktopHeader from "@/components/DesktopHeader";
-import { Settings, Info } from "lucide-react";
+import GitHubConnectionCard from "@/components/GitHubConnectionCard";
+import { Settings, Shield, Cpu } from "lucide-react";
 
 export default function SettingsPage() {
   return (
@@ -11,23 +14,55 @@ export default function SettingsPage() {
         <DesktopHeader title="Settings" />
 
         <main className="flex-1 p-6 md:p-8 max-w-7xl w-full mx-auto space-y-6">
-          <div className="rounded-xl bg-[#0D0F0D] border border-white/10 p-12 text-center flex flex-col items-center justify-center space-y-4">
-            <div className="w-14 h-14 rounded-2xl bg-[#050505] border border-white/10 flex items-center justify-center text-[#B7FF00]">
-              <Settings className="w-7 h-7" />
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-xl bg-[#0D0F0D] border border-white/10 flex items-center justify-center text-[#B7FF00]">
+              <Settings className="w-5 h-5" />
             </div>
-
-            <div className="max-w-md space-y-2">
+            <div>
               <h2 className="text-xl font-mono font-bold text-slate-100">
-                Settings
+                Workspace Settings
               </h2>
-              <p className="text-sm text-slate-400 font-sans">
-                Application settings.
+              <p className="text-xs text-slate-400 font-sans">
+                Manage your GitHub authentication and local security workspace preferences.
               </p>
             </div>
+          </div>
 
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#050505] border border-white/10 text-xs font-mono text-slate-400">
-              <Info className="w-4 h-4 text-[#B7FF00]" />
-              <span>Local engine preferences & Qwen integration settings standby</span>
+          {/* GitHub Connection Management */}
+          <GitHubConnectionCard />
+
+          {/* Local Security Settings Card */}
+          <div className="rounded-xl bg-[#0D0F0D] border border-white/10 p-6 space-y-4">
+            <h3 className="text-sm font-mono font-bold text-slate-200 flex items-center gap-2">
+              <Shield className="w-4 h-4 text-[#B7FF00]" />
+              Local Security Engine Preferences
+            </h3>
+
+            <div className="space-y-3 pt-2 text-xs font-mono text-slate-400">
+              <div className="p-4 rounded-lg bg-[#050505] border border-white/10 flex items-center justify-between">
+                <div>
+                  <p className="font-semibold text-slate-200">Local Analysis Engine</p>
+                  <p className="text-[11px] text-slate-500 font-sans">
+                    Execute code security scans offline on this machine.
+                  </p>
+                </div>
+                <span className="px-2 py-1 rounded bg-[#B7FF00]/15 text-[#B7FF00] border border-[#B7FF00]/30 text-[10px] uppercase">
+                  Active
+                </span>
+              </div>
+
+              <div className="p-4 rounded-lg bg-[#050505] border border-white/10 flex items-center justify-between">
+                <div>
+                  <p className="font-semibold text-slate-200">OAuth Security Protocol</p>
+                  <p className="text-[11px] text-slate-500 font-sans">
+                    Server-side authorization token exchange with PKCE / CSRF state protection.
+                  </p>
+                </div>
+                <span className="px-2 py-1 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-[10px] uppercase flex items-center gap-1">
+                  <Cpu className="w-3 h-3" />
+                  Secure
+                </span>
+              </div>
             </div>
           </div>
         </main>

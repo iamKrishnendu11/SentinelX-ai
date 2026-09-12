@@ -13,20 +13,23 @@ import {
   Cpu,
   Menu,
   X,
+  Lock,
 } from "lucide-react";
 import { useState } from "react";
+import { useGitHub } from "@/context/GitHubContext";
 
 interface NavItem {
   name: string;
   href: string;
   icon: React.ElementType;
+  requiresGitHub?: boolean;
 }
 
 const mainNavItems: NavItem[] = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Projects", href: "/projects", icon: FolderGit2 },
-  { name: "Scans", href: "/scans", icon: Radar },
-  { name: "Vulnerabilities", href: "/vulnerabilities", icon: ShieldAlert },
+  { name: "Projects", href: "/projects", icon: FolderGit2, requiresGitHub: true },
+  { name: "Scans", href: "/scans", icon: Radar, requiresGitHub: true },
+  { name: "Vulnerabilities", href: "/vulnerabilities", icon: ShieldAlert, requiresGitHub: true },
 ];
 
 const secondaryNavItems: NavItem[] = [
@@ -36,6 +39,7 @@ const secondaryNavItems: NavItem[] = [
 
 export default function DesktopSidebar() {
   const pathname = usePathname();
+  const { githubState } = useGitHub();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const renderNavList = (items: NavItem[]) => (
@@ -43,6 +47,8 @@ export default function DesktopSidebar() {
       {items.map((item) => {
         const Icon = item.icon;
         const isActive = pathname === item.href;
+        const isLocked = item.requiresGitHub && !githubState.connected;
+
         return (
           <li key={item.href}>
             <Link
@@ -51,14 +57,25 @@ export default function DesktopSidebar() {
               className={`flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-xs font-mono tracking-wide transition-all ${
                 isActive
                   ? "bg-[#B7FF00]/10 text-[#B7FF00] border border-[#B7FF00]/30 font-semibold shadow-[0_0_15px_rgba(183,255,0,0.1)]"
+                  : isLocked
+                  ? "text-slate-500 hover:text-slate-300 hover:bg-white/[0.02] border border-transparent opacity-80"
                   : "text-slate-400 hover:text-slate-200 hover:bg-white/[0.04] border border-transparent"
               }`}
             >
-              <Icon className={`w-4 h-4 ${isActive ? "text-[#B7FF00]" : "text-slate-400"}`} />
+              <Icon className={`w-4 h-4 ${isActive ? "text-[#B7FF00]" : isLocked ? "text-slate-500" : "text-slate-400"}`} />
               <span>{item.name}</span>
-              {isActive && (
+
+              {isLocked ? (
+                <span
+                  className="ml-auto px-1.5 py-0.5 rounded text-[9px] font-mono uppercase bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center gap-1"
+                  title="Connect GitHub to unlock"
+                >
+                  <Lock className="w-2.5 h-2.5" />
+                  Locked
+                </span>
+              ) : isActive ? (
                 <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[#B7FF00] shadow-[0_0_8px_#B7FF00]" />
-              )}
+              ) : null}
             </Link>
           </li>
         );
@@ -72,7 +89,7 @@ export default function DesktopSidebar() {
       <div className="md:hidden fixed top-3 left-3 z-50">
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
-          className="p-2 rounded-lg bg-[#0D0F0D] border border-white/10 text-slate-300 hover:text-white"
+          className="p-2 rounded-lg bg-[#0D0F0D] border border-white/10 text-slate-300 hover:text-white cursor-pointer"
           aria-label="Toggle Navigation Menu"
         >
           {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}

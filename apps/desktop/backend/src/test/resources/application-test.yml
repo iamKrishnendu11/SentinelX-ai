@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: desktop-backend-test
+
+  datasource:
+    url: jdbc:sqlite:target/sentinel-x-test.db
+    driver-class-name: org.sqlite.JDBC
+
+  jpa:
+    database-platform: org.hibernate.community.dialect.SQLiteDialect
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+
+server:
+  port: 0

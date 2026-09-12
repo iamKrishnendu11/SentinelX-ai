@@ -1,6 +1,7 @@
 import DesktopSidebar from "@/components/DesktopSidebar";
 import DesktopHeader from "@/components/DesktopHeader";
 import WelcomeSection from "@/components/WelcomeSection";
+import GitHubConnectionCard from "@/components/GitHubConnectionCard";
 import QuickStartCard from "@/components/QuickStartCard";
 import ProjectsSection from "@/components/ProjectsSection";
 import SecurityOverview from "@/components/SecurityOverview";
@@ -21,6 +22,9 @@ export default function DashboardPage() {
         <main className="flex-1 p-6 md:p-8 space-y-8 max-w-7xl w-full mx-auto">
           {/* Welcome Hero Section */}
           <WelcomeSection />
+
+          {/* Dedicated GitHub Connection Card */}
+          <GitHubConnectionCard />
 
           {/* Quick Start Grid */}
           <QuickStartCard />

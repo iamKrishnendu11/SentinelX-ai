@@ -89,6 +89,10 @@ export default function SecurityTimeline({
           const isRunning = currentStage === stageNum && status === "RUNNING";
           const isFailed = currentStage === stageNum && status === "FAILED";
           const isWaiting = currentStage < stageNum;
+          const isCompleted = currentStage > index + 1 || (currentStage === index + 1 && status === "COMPLETED");
+          const isRunning = currentStage === index + 1 && status === "RUNNING";
+          const isFailed = currentStage === index + 1 && status === "FAILED";
+          const isWaiting = currentStage < index + 1;
 
           return (
             <div key={item.id} className="flex justify-start pt-10 md:pt-32 md:gap-10">

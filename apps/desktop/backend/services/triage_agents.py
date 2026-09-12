@@ -16,8 +16,8 @@ from services.scanners import run_semgrep, run_gitleaks, run_trivy, run_heuristi
 
 logger = logging.getLogger(__name__)
 
-OLLAMA_API_URL = "http://localhost:11434/api/generate"
-OLLAMA_MODEL = "qwen2.5-coder:7b"
+OLLAMA_API_URL = os.getenv("OLLAMA_API_URL", "http://localhost:11434/api/generate")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5-coder:7b")
 
 async def run_recon(target_dir: str) -> dict[str, Any]:
     """
@@ -154,10 +154,12 @@ async def run_triage(findings: list[dict[str, Any]], target_dir: str) -> list[Vu
 
     verified: list[VulnerabilityFinding] = []
     try:
-        start_idx = raw_llm_response.find("[")
-        end_idx = raw_llm_response.rfind("]")
+        cleaned_response = re.sub(r"```json\s*", "", raw_llm_response)
+        cleaned_response = re.sub(r"```\s*", "", cleaned_response)
+        start_idx = cleaned_response.find("[")
+        end_idx = cleaned_response.rfind("]")
         if start_idx != -1 and end_idx != -1:
-            json_str = raw_llm_response[start_idx:end_idx + 1]
+            json_str = cleaned_response[start_idx:end_idx + 1]
             parsed_list = json.loads(json_str)
             for item in parsed_list:
                 if isinstance(item, dict) and item.get("is_true_positive") is not False:

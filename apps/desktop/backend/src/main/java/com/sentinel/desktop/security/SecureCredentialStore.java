@@ -66,10 +66,31 @@ public class SecureCredentialStore {
 
     private SecretKey generateMasterKey() {
         try {
-            String userHome = System.getProperty("user.name", "sentinel_user");
-            byte[] keyBytes = new byte[32];
-            byte[] seedBytes = userHome.getBytes(StandardCharsets.UTF_8);
-            System.arraycopy(seedBytes, 0, keyBytes, 0, Math.min(seedBytes.length, 32));
+            String userHome = System.getProperty("user.home");
+            java.io.File sentinelDir = new java.io.File(userHome, ".sentinelx");
+            if (!sentinelDir.exists()) {
+                sentinelDir.mkdirs();
+            }
+            java.io.File keyFile = new java.io.File(sentinelDir, "master.key");
+
+            byte[] keyBytes;
+            if (keyFile.exists() && keyFile.length() == 32) {
+                try (java.io.FileInputStream fis = new java.io.FileInputStream(keyFile)) {
+                    keyBytes = fis.readAllBytes();
+                }
+            } else {
+                keyBytes = new byte[32];
+                new SecureRandom().nextBytes(keyBytes);
+                try (java.io.FileOutputStream fos = new java.io.FileOutputStream(keyFile)) {
+                    fos.write(keyBytes);
+                }
+                try {
+                    keyFile.setReadable(false, false);
+                    keyFile.setReadable(true, true);
+                    keyFile.setWritable(false, false);
+                    keyFile.setWritable(true, true);
+                } catch (Exception ignored) {}
+            }
             return new SecretKeySpec(keyBytes, "AES");
         } catch (Exception e) {
             try {

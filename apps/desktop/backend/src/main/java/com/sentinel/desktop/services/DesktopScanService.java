@@ -27,6 +27,8 @@ public class DesktopScanService {
         this.projectRepository = projectRepository;
     }
 
+    private final java.util.Map<String, java.util.Map<String, Object>> activeTestSessions = new java.util.concurrent.ConcurrentHashMap<>();
+
     public List<Scan> getScansForProject(String sentinelUserId, String projectId) {
         // Validate project ownership
         Optional<Project> projectOpt = projectRepository.findBySentinelUserIdAndId(sentinelUserId, projectId);
@@ -43,5 +45,20 @@ public class DesktopScanService {
             return List.of();
         }
         return vulnerabilityRepository.findBySentinelUserIdAndScanId(sentinelUserId, scanId);
+    }
+
+    public java.util.Map<String, Object> startTestSession(String sentinelUserId, String projectId) {
+        java.util.Map<String, Object> session = new java.util.HashMap<>();
+        session.put("id", "sess-" + java.util.UUID.randomUUID().toString().substring(0, 8));
+        session.put("projectId", projectId);
+        session.put("status", "RUNNING");
+        session.put("currentStage", 1);
+        session.put("message", "Digital Twin sandbox provisioned and scan initiated.");
+        activeTestSessions.put(sentinelUserId + ":" + projectId, session);
+        return session;
+    }
+
+    public java.util.Map<String, Object> getTestStatus(String sentinelUserId, String projectId) {
+        return activeTestSessions.get(sentinelUserId + ":" + projectId);
     }
 }

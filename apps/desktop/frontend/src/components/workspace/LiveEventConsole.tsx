@@ -11,17 +11,21 @@ export default function LiveEventConsole({ events }: { events: TestEvent[] }) {
   const prevEventCount = useRef(events.length);
 
   useEffect(() => {
-    if (events.length > prevEventCount.current) {
-      // Animate new events in
-      const newItemsCount = events.length - prevEventCount.current;
-      const newItems = Array.from(containerRef.current?.children || []).slice(-newItemsCount - 1); // -1 for the scroll anchor
-      
-      gsap.fromTo(
-        newItems,
-        { opacity: 0, x: -10 },
-        { opacity: 1, x: 0, duration: 0.3, stagger: 0.05, ease: "power2.out" }
+    if (events.length > prevEventCount.current && containerRef.current) {
+      const children = Array.from(containerRef.current.children).filter(
+        (el) => el !== endOfMessagesRef.current
       );
-      
+      const newItemsCount = events.length - prevEventCount.current;
+      const newItems = children.slice(-newItemsCount);
+
+      if (newItems.length > 0) {
+        gsap.fromTo(
+          newItems,
+          { opacity: 0, x: -10 },
+          { opacity: 1, x: 0, duration: 0.3, stagger: 0.05, ease: "power2.out" }
+        );
+      }
+
       endOfMessagesRef.current?.scrollIntoView({ behavior: "smooth" });
     }
     prevEventCount.current = events.length;

@@ -9,6 +9,7 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "docx": "^9.7.1",
     "framer-motion": "^13.2.0",
     "gsap": "^3.15.0",
     "lucide-react": "^1.30.0",

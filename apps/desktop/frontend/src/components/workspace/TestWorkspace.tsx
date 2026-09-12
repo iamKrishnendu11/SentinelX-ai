@@ -64,8 +64,10 @@ export default function TestWorkspace({ projectId }: { projectId: string }) {
     setError(null);
     
     const ts = new Date().toTimeString().slice(0, 8);
+    const uid = () => `${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+
     setEvents([
-      { id: `start-${Date.now()}`, timestamp: ts, stage: 1, message: "Initializing SentinelX Digital Twin Sandbox...", type: "info" }
+      { id: `start-${uid()}`, timestamp: ts, stage: 1, message: "Initializing SentinelX Digital Twin Sandbox...", type: "info" }
     ]);
     
     try {
@@ -74,7 +76,7 @@ export default function TestWorkspace({ projectId }: { projectId: string }) {
       
       setEvents(prev => [
         ...prev, 
-        { id: `ok-${Date.now()}`, timestamp: new Date().toTimeString().slice(0, 8), stage: 1, message: "Sandbox provisioned. Launching security swarm...", type: "success" }
+        { id: `ok-${uid()}`, timestamp: new Date().toTimeString().slice(0, 8), stage: 1, message: "Sandbox provisioned. Launching security swarm...", type: "success" }
       ]);
 
       // Subscribe to real-time Python AI audit event stream
@@ -87,19 +89,19 @@ export default function TestWorkspace({ projectId }: { projectId: string }) {
         (evt) => {
           const timestamp = new Date().toTimeString().slice(0, 8);
           if (evt.event === "RECON_STARTED") {
-            setEvents(prev => [...prev, { id: `evt-${Date.now()}`, timestamp, stage: 2, message: evt.message || "Reconnaissance active...", type: "info" }]);
+            setEvents(prev => [...prev, { id: `evt-recon-${uid()}`, timestamp, stage: 2, message: evt.message || "Reconnaissance active...", type: "info" }]);
             setSession(s => s ? { ...s, currentStage: Math.max(s.currentStage, 2), status: "RUNNING" } : null);
           } else if (evt.event === "SCANNERS_RUNNING") {
-            setEvents(prev => [...prev, { id: `evt-${Date.now()}`, timestamp, stage: 4, message: evt.message || "Static code and dependency scanners running...", type: "info" }]);
+            setEvents(prev => [...prev, { id: `evt-scan-${uid()}`, timestamp, stage: 4, message: evt.message || "Static code and dependency scanners running...", type: "info" }]);
             setSession(s => s ? { ...s, currentStage: Math.max(s.currentStage, 4), status: "RUNNING" } : null);
           } else if (evt.event === "HEURISTIC_FALLBACK_ENGAGED") {
-            setEvents(prev => [...prev, { id: `evt-${Date.now()}`, timestamp, stage: 4, message: typeof evt.data === "string" ? evt.data : "Engaging heuristic analyzer...", type: "warning" }]);
+            setEvents(prev => [...prev, { id: `evt-heur-${uid()}`, timestamp, stage: 4, message: typeof evt.data === "string" ? evt.data : "Engaging heuristic analyzer...", type: "warning" }]);
           } else if (evt.event === "AI_TRIAGE_ACTIVE") {
-            setEvents(prev => [...prev, { id: `evt-${Date.now()}`, timestamp, stage: 6, message: evt.message || "Qwen AI agent triaging findings...", type: "info" }]);
+            setEvents(prev => [...prev, { id: `evt-triage-${uid()}`, timestamp, stage: 6, message: evt.message || "Qwen AI agent triaging findings...", type: "info" }]);
             setSession(s => s ? { ...s, currentStage: Math.max(s.currentStage, 6), status: "RUNNING" } : null);
           } else if (evt.event === "REPORT_READY") {
             const vulnCount = evt.data?.verified_vulnerabilities?.length || 0;
-            setEvents(prev => [...prev, { id: `evt-${Date.now()}`, timestamp, stage: 10, message: `Audit pipeline complete. ${vulnCount} verified vulnerability finding(s) persisted.`, type: "success" }]);
+            setEvents(prev => [...prev, { id: `evt-report-${uid()}`, timestamp, stage: 10, message: `Audit pipeline complete. ${vulnCount} verified vulnerability finding(s) persisted.`, type: "success" }]);
             setSession(s => s ? { ...s, currentStage: 10, status: "COMPLETED" } : null);
           }
         },

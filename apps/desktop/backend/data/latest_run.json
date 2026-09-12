@@ -1,26 +1,62 @@
 {
-  "session_id": "sess-3487909a",
+  "session_id": "sess-34d19350",
   "target_repo": "https://github.com/iamKrishnendu11/GitGPT",
-  "scanned_at": "2026-09-12T21:31:08.635628Z",
+  "scanned_at": "2026-09-12T23:02:30.415956Z",
   "summary": {
-    "total_probes": 7,
+    "total_probes": 11,
     "blocked_or_safe": 6,
-    "verified_exploits": 1,
-    "security_score": 90
+    "verified_exploits": 5,
+    "security_score": 5
   },
   "telemetry_timeline": [
     {
       "probe_id": "probe-v-1",
-      "timestamp": "2026-09-12T21:31:08.635628Z",
-      "vector": "XSS",
-      "target_endpoint": "/client\\components\\ui\\chart.tsx",
+      "timestamp": "2026-09-12T23:02:30.415956Z",
+      "vector": "SQLi",
+      "target_endpoint": "/unknown_file",
+      "action": "VERIFY_INPUT_SANITIZATION",
+      "status": "EXPLOIT_VERIFIED",
+      "side": "red"
+    },
+    {
+      "probe_id": "probe-v-2",
+      "timestamp": "2026-09-12T23:02:30.415956Z",
+      "vector": "SQLi",
+      "target_endpoint": "/unknown_file",
+      "action": "VERIFY_INPUT_SANITIZATION",
+      "status": "EXPLOIT_VERIFIED",
+      "side": "red"
+    },
+    {
+      "probe_id": "probe-v-3",
+      "timestamp": "2026-09-12T23:02:30.415956Z",
+      "vector": "SQLi",
+      "target_endpoint": "/unknown_file",
+      "action": "VERIFY_INPUT_SANITIZATION",
+      "status": "EXPLOIT_VERIFIED",
+      "side": "red"
+    },
+    {
+      "probe_id": "probe-v-4",
+      "timestamp": "2026-09-12T23:02:30.415956Z",
+      "vector": "SQLi",
+      "target_endpoint": "/unknown_file",
+      "action": "VERIFY_INPUT_SANITIZATION",
+      "status": "EXPLOIT_VERIFIED",
+      "side": "red"
+    },
+    {
+      "probe_id": "probe-v-5",
+      "timestamp": "2026-09-12T23:02:30.415956Z",
+      "vector": "SQLi",
+      "target_endpoint": "/unknown_file",
       "action": "VERIFY_INPUT_SANITIZATION",
       "status": "EXPLOIT_VERIFIED",
       "side": "red"
     },
     {
       "probe_id": "probe-c-1",
-      "timestamp": "2026-09-12T21:31:08.635628Z",
+      "timestamp": "2026-09-12T23:02:30.415956Z",
       "vector": "IDOR",
       "target_endpoint": "/api/v1/user",
       "action": "FUZZ_PARAMETER",
@@ -29,7 +65,7 @@
     },
     {
       "probe_id": "probe-c-2",
-      "timestamp": "2026-09-12T21:31:08.635628Z",
+      "timestamp": "2026-09-12T23:02:30.415956Z",
       "vector": "CSRF",
       "target_endpoint": "/api/v1/auth",
       "action": "CHECK_HEADER",
@@ -38,7 +74,7 @@
     },
     {
       "probe_id": "probe-c-3",
-      "timestamp": "2026-09-12T21:31:08.635628Z",
+      "timestamp": "2026-09-12T23:02:30.415956Z",
       "vector": "DESERIALIZATION",
       "target_endpoint": "/api/v1/ping",
       "action": "FUZZ_PARAMETER",
@@ -46,8 +82,17 @@
       "side": "red"
     },
     {
+      "probe_id": "probe-c-4",
+      "timestamp": "2026-09-12T23:02:30.415956Z",
+      "vector": "XSS",
+      "target_endpoint": "/api/v1/upload",
+      "action": "FUZZ_PARAMETER",
+      "status": "SAFE",
+      "side": "red"
+    },
+    {
       "probe_id": "probe-c-5",
-      "timestamp": "2026-09-12T21:31:08.635628Z",
+      "timestamp": "2026-09-12T23:02:30.415956Z",
       "vector": "CORS",
       "target_endpoint": "/api/v1/user",
       "action": "CHECK_HEADER",
@@ -55,17 +100,8 @@
       "side": "red"
     },
     {
-      "probe_id": "probe-c-6",
-      "timestamp": "2026-09-12T21:31:08.635628Z",
-      "vector": "SQLi",
-      "target_endpoint": "/api/v1/auth",
-      "action": "FUZZ_PARAMETER",
-      "status": "SAFE",
-      "side": "red"
-    },
-    {
       "probe_id": "probe-c-7",
-      "timestamp": "2026-09-12T21:31:08.635628Z",
+      "timestamp": "2026-09-12T23:02:30.415956Z",
       "vector": "COMMAND_INJECTION",
       "target_endpoint": "/api/v1/ping",
       "action": "FUZZ_PARAMETER",
@@ -75,17 +111,65 @@
   ],
   "verified_vulnerabilities": [
     {
-      "id": "vuln-heuristic-1",
-      "scanner_source": "heuristic",
-      "title": "Cross-Site Scripting (XSS) / Unsafe HTML Render",
-      "cwe_id": "CWE-20",
+      "id": "vuln-trivy-1",
+      "scanner_source": "trivy",
+      "title": "Apache Tomcat: Apache Tomcat: Security constraint bypass due to improper access control",
+      "cwe_id": "CWE-284",
+      "severity": "CRITICAL",
+      "file_path": "unknown_file",
+      "line_number": 1,
+      "raw_snippet": "// Finding at unknown_file:1",
+      "root_cause_analysis": "Static analysis alert flagged by trivy in unknown_file.",
+      "is_true_positive": true
+    },
+    {
+      "id": "vuln-trivy-2",
+      "scanner_source": "trivy",
+      "title": "tomcat: Apache Tomcat: Authentication bypass via limited replay attack in DIGEST authenticator",
+      "cwe_id": "CWE-294",
+      "severity": "CRITICAL",
+      "file_path": "unknown_file",
+      "line_number": 1,
+      "raw_snippet": "// Finding at unknown_file:1",
+      "root_cause_analysis": "Static analysis alert flagged by trivy in unknown_file.",
+      "is_true_positive": true
+    },
+    {
+      "id": "vuln-trivy-3",
+      "scanner_source": "trivy",
+      "title": "org.apache.tomcat/tomcat: Apache Tomcat: Unauthorized resource access via FORM authentication bypass",
+      "cwe_id": "CWE-863",
+      "severity": "CRITICAL",
+      "file_path": "unknown_file",
+      "line_number": 1,
+      "raw_snippet": "// Finding at unknown_file:1",
+      "root_cause_analysis": "Static analysis alert flagged by trivy in unknown_file.",
+      "is_true_positive": true
+    },
+    {
+      "id": "vuln-trivy-4",
+      "scanner_source": "trivy",
+      "title": "qs: qs: Denial of Service via improper validation in stringify function",
+      "cwe_id": "CWE-248",
       "severity": "MEDIUM",
-      "file_path": "client\\components\\ui\\chart.tsx",
-      "line_number": 95,
-      "raw_snippet": "  return (\n    <style\n      dangerouslySetInnerHTML={{\n        __html: Object.entries(THEMES)\n          .map(\n            ([theme, prefix]) => `\n",
-      "root_cause_analysis": "The use of `dangerouslySetInnerHTML` with raw user input or data without proper sanitization can lead to Cross-Site Scripting (XSS). The static scanner flagged this as a potential vulnerability.",
+      "file_path": "unknown_file",
+      "line_number": 1,
+      "raw_snippet": "// Finding at unknown_file:1",
+      "root_cause_analysis": "Static analysis alert flagged by trivy in unknown_file.",
+      "is_true_positive": true
+    },
+    {
+      "id": "vuln-trivy-5",
+      "scanner_source": "trivy",
+      "title": "qs: qs: Denial of Service via array limit bypass in query string parsing",
+      "cwe_id": "CWE-770",
+      "severity": "MEDIUM",
+      "file_path": "unknown_file",
+      "line_number": 1,
+      "raw_snippet": "// Finding at unknown_file:1",
+      "root_cause_analysis": "Static analysis alert flagged by trivy in unknown_file.",
       "is_true_positive": true
     }
   ],
-  "heuristic_fallback_engaged": true
+  "heuristic_fallback_engaged": false
 }

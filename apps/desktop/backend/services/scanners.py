@@ -9,14 +9,40 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
+def _get_fresh_path() -> str:
+    """Read the live system PATH from the Windows registry (or current env on other OS)."""
+    if os.name == "nt":
+        try:
+            import winreg
+            machine_path = ""
+            user_path = ""
+            try:
+                with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r"SYSTEM\CurrentControlSet\Control\Session Manager\Environment") as key:
+                    machine_path, _ = winreg.QueryValueEx(key, "Path")
+            except Exception:
+                pass
+            try:
+                with winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Environment") as key:
+                    user_path, _ = winreg.QueryValueEx(key, "Path")
+            except Exception:
+                pass
+            return machine_path + ";" + user_path
+        except Exception:
+            pass
+    return os.environ.get("PATH", "")
+
 def _exec_cmd(cmd: list[str], cwd: str) -> tuple[int, str]:
     try:
-        executable = shutil.which(cmd[0])
+        # Refresh PATH from registry so tools installed after this process started are found
+        fresh_path = _get_fresh_path()
+        executable = shutil.which(cmd[0], path=fresh_path)
         if not executable:
             logger.info(f"CLI tool '{cmd[0]}' not installed in system PATH. Skipping {cmd[0]} scan.")
             return -1, ""
+        env = os.environ.copy()
+        env["PATH"] = fresh_path
         use_shell = (os.name == "nt")
-        res = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, errors="ignore", shell=use_shell)
+        res = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, errors="ignore", shell=use_shell, env=env)
         return res.returncode, res.stdout
     except Exception as e:
         logger.warning(f"CLI command execution error ({cmd[0]}): {e}")

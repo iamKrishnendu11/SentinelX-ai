@@ -79,7 +79,7 @@ export default function DashboardHeader({ user }: DashboardHeaderProps) {
         {/* Left: Logo */}
         <Link href="/dashboard" className="flex items-center gap-2.5 group">
           <div className="w-8 h-8 rounded-full bg-[#B7FF00]/10 border border-[#B7FF00]/20 flex items-center justify-center group-hover:border-[#B7FF00]/40 transition-colors">
-            <Shield className="w-4 h-4 text-[#B7FF00]" />
+            <img src="/logo.png" alt="SentinelX Logo" className="w-4 h-4 object-contain drop-shadow-[0_0_8px_#B7FF00]" />
           </div>
           <span className="font-display font-bold tracking-tight text-sm text-[#F5F5F0] uppercase">
             Sentinel<span className="text-[#B7FF00]">-</span>X

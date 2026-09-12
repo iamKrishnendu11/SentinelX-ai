@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
+import { useSearchParams, useRouter } from "next/navigation";
+import { TransitionLink as Link } from "@/components/ui/transition-link";
 import { authApi } from "@/lib/api";
 import { Mail, Lock, ArrowRight, Shield, AlertTriangle } from "lucide-react";
 import { BlobCard } from "../../../ui/blob-card";
@@ -52,10 +52,10 @@ function LoginForm() {
       className="max-w-md mx-auto"
       headerHeight={200}
       header={
-        <div className="flex flex-col items-center text-center">
-          <div className="w-12 h-12 rounded-full bg-[#B7FF00]/10 border border-[#B7FF00]/20 flex items-center justify-center mb-3">
-            <Shield className="w-6 h-6 text-[#B7FF00]" />
-          </div>
+          <div className="flex flex-col items-center text-center">
+            <div className="w-12 h-12 rounded-full bg-[#B7FF00]/10 border border-[#B7FF00]/20 flex items-center justify-center mb-3">
+              <img src="/logo.png" alt="SentinelX Logo" className="w-6 h-6 object-contain drop-shadow-[0_0_8px_#B7FF00]" />
+            </div>
           <h1 className="font-display text-2xl font-bold tracking-tight">Log in to Sentinel-X</h1>
           <p className="text-xs text-[#9CA3AF] mt-1 font-mono uppercase tracking-wider">Predict. Fight. Heal.</p>
         </div>
@@ -138,11 +138,8 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <main className="min-h-screen bg-[#050505] text-[#F5F5F0] flex items-center justify-center p-6 relative overflow-hidden">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(183,255,0,0.04)_0%,transparent_60%)] pointer-events-none" />
-      <Suspense fallback={<div className="text-ash font-mono">Loading...</div>}>
-        <LoginForm />
-      </Suspense>
-    </main>
+    <Suspense fallback={<div className="text-ash font-mono">Loading...</div>}>
+      <LoginForm />
+    </Suspense>
   );
 }

@@ -1,15 +1,13 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
+import { useSearchParams, useRouter } from "next/navigation";
+import { TransitionLink as Link } from "@/components/ui/transition-link";
 import { authApi } from "@/lib/api";
 import { KeyRound, ArrowRight, RefreshCw, CheckCircle } from "lucide-react";
 import OtpStep from "../../../../auth/OtpStep";
 import { BlobCard } from "../../../ui/blob-card";
 
 function VerifyEmailForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get("email") || "";
 
@@ -17,6 +15,8 @@ function VerifyEmailForm() {
     // The OtpStep will catch the error if thrown.
     await authApi.verifyEmail(email, otpString);
   };
+
+  const router = useRouter();
 
   const handleSuccessComplete = () => {
     router.push("/auth/login?verified=true");
@@ -33,7 +33,7 @@ function VerifyEmailForm() {
       header={
         <div className="flex flex-col items-center text-center">
           <div className="w-12 h-12 rounded-full bg-[#B7FF00]/10 border border-[#B7FF00]/20 flex items-center justify-center">
-            <KeyRound className="w-6 h-6 text-[#B7FF00]" />
+            <img src="/logo.png" alt="SentinelX Logo" className="w-6 h-6 object-contain drop-shadow-[0_0_8px_#B7FF00]" />
           </div>
         </div>
       }
@@ -55,11 +55,8 @@ function VerifyEmailForm() {
 
 export default function VerifyEmailPage() {
   return (
-    <main className="min-h-screen bg-[#050505] text-[#F5F5F0] flex items-center justify-center p-6 relative overflow-hidden">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(183,255,0,0.04)_0%,transparent_60%)] pointer-events-none" />
-      <Suspense fallback={<div className="text-ash font-mono">Loading...</div>}>
-        <VerifyEmailForm />
-      </Suspense>
-    </main>
+    <Suspense fallback={<div className="text-ash font-mono">Loading...</div>}>
+      <VerifyEmailForm />
+    </Suspense>
   );
 }

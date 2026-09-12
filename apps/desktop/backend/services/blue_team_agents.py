@@ -4,6 +4,7 @@ import ast
 import json
 import time
 import shutil
+import tempfile
 import difflib
 import asyncio
 import logging
@@ -98,9 +99,15 @@ async def generate_code_patch(finding: VulnerabilityFinding, repo_path: Optional
         "Respond strictly with valid JSON."
     )
 
-    raw_response = await call_ollama_remediation(prompt)
+    fallback_used = False
+    raw_response = ""
+    try:
+        raw_response = await asyncio.wait_for(call_ollama_remediation(prompt), timeout=8.0)
+    except Exception as e:
+        logger.warning(f"Ollama remediation call timed out or failed ({e}). Engaging rule-based fallback.")
+        fallback_used = True
 
-    if raw_response:
+    if raw_response and not fallback_used:
         try:
             start_idx = raw_response.find("{")
             end_idx = raw_response.rfind("}")
@@ -110,21 +117,24 @@ async def generate_code_patch(finding: VulnerabilityFinding, repo_path: Optional
                 patched_code = data.get("patched_code", code_context)
                 if not patched_code or patched_code == code_context:
                     patched_code = generate_rule_based_fix(finding)
+                    fallback_used = True
 
                 return {
                     "original_code": code_context,
                     "patched_code": patched_code,
-                    "developer_note": data.get("developer_note", build_default_dev_note(finding))
+                    "developer_note": data.get("developer_note", build_default_dev_note(finding)),
+                    "fallback_used": fallback_used
                 }
         except Exception:
-            pass
+            fallback_used = True
 
     # Fallback rule-based patch generator if LLM is offline, timed out, or returned unparsed JSON
     fallback_patch = generate_rule_based_fix(finding)
     return {
         "original_code": code_context,
         "patched_code": fallback_patch,
-        "developer_note": build_default_dev_note(finding)
+        "developer_note": build_default_dev_note(finding),
+        "fallback_used": True
     }
 
 def generate_rule_based_fix(finding: VulnerabilityFinding) -> str:
@@ -164,12 +174,35 @@ def validate_syntax(file_path: str, code_content: str) -> tuple[bool, Optional[s
             return True, None
         except SyntaxError as se:
             return False, f"Python SyntaxError: {se}"
-    elif ext in [".js", ".ts", ".jsx", ".tsx", ".json"]:
-        open_braces = code_content.count("{") - code_content.count("}")
-        open_parens = code_content.count("(") - code_content.count(")")
-        open_brackets = code_content.count("[") - code_content.count("]")
-        if open_braces != 0 or open_parens != 0 or open_brackets != 0:
-            return False, f"Unbalanced syntax delimiters (braces: {open_braces}, parens: {open_parens}, brackets: {open_brackets})"
+    elif ext in [".js", ".ts", ".jsx", ".tsx"]:
+        temp_file = tempfile.NamedTemporaryFile(mode="w", suffix=".js", delete=False, encoding="utf-8")
+        temp_file_path = temp_file.name
+        try:
+            temp_file.write(code_content)
+            temp_file.close()
+            res = subprocess.run(["node", "--check", temp_file_path], capture_output=True, text=True, errors="ignore")
+            if res.returncode == 0:
+                return True, None
+            else:
+                stderr_msg = res.stderr.strip() or f"Node check exited with return code {res.returncode}"
+                return False, f"Node SyntaxError: {stderr_msg}"
+        except FileNotFoundError:
+            logger.warning("Node.js binary not found for syntax check.")
+            return False, "Node.js executable not found on system PATH for syntax validation."
+        except Exception as e:
+            return False, f"Syntax validation execution error: {e}"
+        finally:
+            if os.path.exists(temp_file_path):
+                try:
+                    os.remove(temp_file_path)
+                except Exception:
+                    pass
+    elif ext == ".json":
+        try:
+            json.loads(code_content)
+            return True, None
+        except Exception as e:
+            return False, f"JSON SyntaxError: {e}"
     return True, None
 
 def validate_and_build_diff(file_path: str, original_code: str, patched_code: str) -> tuple[str, bool]:
@@ -233,6 +266,7 @@ async def process_single_finding(finding: VulnerabilityFinding, repo_path: str, 
     patch_res = await generate_code_patch(finding, repo_path)
     patched_code = patch_res["patched_code"]
     dev_note = patch_res["developer_note"]
+    fallback_used = patch_res.get("fallback_used", False)
 
     # Build updated content
     updated_file_content = original_content
@@ -288,7 +322,8 @@ async def process_single_finding(finding: VulnerabilityFinding, repo_path: str, 
         syntax_valid=syntax_valid,
         applied_to_disk=applied_to_disk,
         backup_file_path=backup_file_path,
-        error_details=error_details
+        error_details=error_details,
+        fallback_used=fallback_used
     )
 
 async def execute_remediation_pipeline(
@@ -308,13 +343,15 @@ async def execute_remediation_pipeline(
         "message": f"Generating secure code patches for {len(findings)} vulnerability finding(s)..."
     }
 
-    # Execute patch generation concurrently across findings
-    tasks = [
-        process_single_finding(finding, repo_path or "", auto_apply, create_git_branch, branch_name)
-        for finding in findings
-    ]
-
-    patches: list[PatchItem] = await asyncio.gather(*tasks)
+    patches: list[PatchItem] = []
+    for finding in findings:
+        patch_item = await process_single_finding(finding, repo_path or "", auto_apply, create_git_branch, branch_name)
+        if patch_item.fallback_used:
+            yield {
+                "event": "RULE_BASED_FALLBACK_ENGAGED",
+                "data": "LLM timed out. Applying deterministic secure patch."
+            }
+        patches.append(patch_item)
 
     total_successful = sum(1 for p in patches if p.syntax_valid)
     duration = round(time.time() - start_time, 2)

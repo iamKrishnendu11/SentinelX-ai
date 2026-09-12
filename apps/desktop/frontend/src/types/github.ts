@@ -12,10 +12,13 @@ export interface Project {
   id: string;
   repositoryId: string;
   repositoryName: string;
+  repositoryFullName?: string;
   owner: string;
   private: boolean;
   defaultBranch: string;
   connectedAt: string;
+  description?: string;
+  htmlUrl?: string;
 }
 
 export interface GitHubRepository {

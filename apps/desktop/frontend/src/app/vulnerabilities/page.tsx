@@ -2,12 +2,15 @@
 
 import DesktopSidebar from "@/components/DesktopSidebar";
 import DesktopHeader from "@/components/DesktopHeader";
+import LocalAISetupCard from "@/components/LocalAISetupCard";
 import { ShieldAlert, Info, Lock } from "lucide-react";
 import { useGitHub } from "@/context/GitHubContext";
+import { useLocalAI } from "@/context/LocalAIContext";
 import { GitHubIcon } from "@/components/icons/GitHubIcon";
 
 export default function VulnerabilitiesPage() {
   const { githubState, connectGitHub } = useGitHub();
+  const { aiStatus } = useLocalAI();
 
   return (
     <div className="min-h-screen bg-[#050505] flex text-slate-100">
@@ -25,7 +28,7 @@ export default function VulnerabilitiesPage() {
 
               <div className="max-w-md space-y-2">
                 <h2 className="text-xl font-mono font-bold text-slate-100">
-                  Vulnerabilities Unavailable
+                  Vulnerabilities Locked
                 </h2>
                 <p className="text-sm text-slate-400 font-sans">
                   Connect GitHub and run security scans to review detected vulnerabilities.
@@ -39,6 +42,14 @@ export default function VulnerabilitiesPage() {
                 <GitHubIcon className="w-4 h-4" />
                 <span>Connect GitHub</span>
               </button>
+            </div>
+          ) : !aiStatus.ready ? (
+            <div className="space-y-6">
+              <div className="rounded-xl bg-amber-500/10 border border-amber-500/30 p-4 text-xs font-mono text-amber-300 flex items-center gap-2">
+                <Lock className="w-4 h-4 text-amber-400 shrink-0" />
+                <span>Vulnerabilities are locked until local AI engine setup is complete.</span>
+              </div>
+              <LocalAISetupCard />
             </div>
           ) : (
             <div className="rounded-xl bg-[#0D0F0D] border border-white/10 p-12 text-center flex flex-col items-center justify-center space-y-4">
@@ -66,3 +77,4 @@ export default function VulnerabilitiesPage() {
     </div>
   );
 }
+

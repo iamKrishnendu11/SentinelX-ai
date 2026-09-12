@@ -6,6 +6,7 @@ import QuickStartCard from "@/components/QuickStartCard";
 import ProjectsSection from "@/components/ProjectsSection";
 import SecurityOverview from "@/components/SecurityOverview";
 import LocalFirstCard from "@/components/LocalFirstCard";
+import LocalAISetupCard from "@/components/LocalAISetupCard";
 
 export default function DashboardPage() {
   return (
@@ -25,6 +26,9 @@ export default function DashboardPage() {
 
           {/* Dedicated GitHub Connection Card */}
           <GitHubConnectionCard />
+
+          {/* Mandatory Local AI Environment Checker */}
+          <LocalAISetupCard />
 
           {/* Quick Start Grid */}
           <QuickStartCard />

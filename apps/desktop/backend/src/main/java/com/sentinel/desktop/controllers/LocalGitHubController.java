@@ -61,7 +61,7 @@ public class LocalGitHubController {
     @PostMapping("/connect")
     public ResponseEntity<Map<String, Object>> connectGitHub() {
         if (clientId != null && !clientId.isBlank()) {
-            String oauthUrl = "https://github.com/login/oauth/authorize?client_id=" + clientId;
+            String oauthUrl = "https://github.com/login/oauth/authorize?client_id=" + clientId + "&scope=repo,read:user,user:email";
             return ResponseEntity.ok(Map.of("url", oauthUrl));
         }
         return ResponseEntity.status(404).body(Map.of("error", "GitHub Client ID not configured on backend"));
@@ -125,7 +125,7 @@ public class LocalGitHubController {
                     }
                 }
             } catch (Exception e) {
-                // Silently fallback to generated fields if network error occurs
+                System.err.println("[LocalGitHubController] Error fetching GitHub profile: " + e.getMessage());
             }
         }
 
@@ -159,49 +159,54 @@ public class LocalGitHubController {
 
         Optional<String> tokenOpt = gitHubService.getGitHubAccessToken(activeUserId);
 
-        if (tokenOpt.isPresent() && !tokenOpt.get().isBlank()) {
-            try {
-                String token = tokenOpt.get();
-                HttpHeaders userHeaders = new HttpHeaders();
-                userHeaders.setBearerAuth(token);
-                userHeaders.set("User-Agent", "SentinelX-Desktop");
-                HttpEntity<Void> userEntity = new HttpEntity<>(userHeaders);
+        if (tokenOpt.isEmpty() || tokenOpt.get().isBlank()) {
+            return ResponseEntity.status(401).body(Map.of("error", "GitHub access token missing. Please reconnect GitHub."));
+        }
 
-                // Fetch real user repositories from GitHub API
-                ResponseEntity<List> reposResp = restTemplate.exchange(
-                        "https://api.github.com/user/repos?per_page=100&sort=updated",
-                        HttpMethod.GET,
-                        userEntity,
-                        List.class
-                );
+        try {
+            String token = tokenOpt.get();
+            HttpHeaders userHeaders = new HttpHeaders();
+            userHeaders.setBearerAuth(token);
+            userHeaders.set("User-Agent", "SentinelX-Desktop");
+            HttpEntity<Void> userEntity = new HttpEntity<>(userHeaders);
 
-                if (reposResp.getStatusCode().is2xxSuccessful() && reposResp.getBody() != null) {
-                    List<Map<String, Object>> rawRepos = reposResp.getBody();
-                    List<Map<String, Object>> formattedRepos = rawRepos.stream().map(repo -> {
-                        String id = repo.get("id") != null ? String.valueOf(repo.get("id")) : "";
-                        String name = repo.get("name") != null ? String.valueOf(repo.get("name")) : "";
-                        String owner = repo.get("owner") instanceof Map ? String.valueOf(((Map<?, ?>) repo.get("owner")).get("login")) : accountOpt.get().getUsername();
-                        boolean isPrivate = Boolean.TRUE.equals(repo.get("private"));
-                        String htmlUrl = repo.get("html_url") != null ? String.valueOf(repo.get("html_url")) : "";
-                        String defaultBranch = repo.get("default_branch") != null ? String.valueOf(repo.get("default_branch")) : "main";
-                        String description = repo.get("description") != null ? String.valueOf(repo.get("description")) : "";
+            // Fetch real user repositories from GitHub API
+            ResponseEntity<List> reposResp = restTemplate.exchange(
+                    "https://api.github.com/user/repos?per_page=100&sort=updated&type=all",
+                    HttpMethod.GET,
+                    userEntity,
+                    List.class
+            );
 
-                        Map<String, Object> map = new java.util.HashMap<>();
-                        map.put("id", id);
-                        map.put("name", name);
-                        map.put("owner", owner);
-                        map.put("private", isPrivate);
-                        map.put("htmlUrl", htmlUrl);
-                        map.put("defaultBranch", defaultBranch);
-                        map.put("description", description);
-                        return map;
-                    }).toList();
+            if (reposResp.getStatusCode().is2xxSuccessful() && reposResp.getBody() != null) {
+                List<Map<String, Object>> rawRepos = reposResp.getBody();
+                List<Map<String, Object>> formattedRepos = rawRepos.stream().map(repo -> {
+                    String id = repo.get("id") != null ? String.valueOf(repo.get("id")) : "";
+                    String name = repo.get("name") != null ? String.valueOf(repo.get("name")) : "";
+                    String owner = repo.get("owner") instanceof Map ? String.valueOf(((Map<?, ?>) repo.get("owner")).get("login")) : accountOpt.get().getUsername();
+                    boolean isPrivate = Boolean.TRUE.equals(repo.get("private"));
+                    String htmlUrl = repo.get("html_url") != null ? String.valueOf(repo.get("html_url")) : "";
+                    String defaultBranch = repo.get("default_branch") != null ? String.valueOf(repo.get("default_branch")) : "main";
+                    String description = repo.get("description") != null ? String.valueOf(repo.get("description")) : "";
+                    String fullName = repo.get("full_name") != null ? String.valueOf(repo.get("full_name")) : owner + "/" + name;
 
-                    return ResponseEntity.ok(Map.of("repositories", formattedRepos));
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
+                    Map<String, Object> map = new java.util.HashMap<>();
+                    map.put("id", id);
+                    map.put("name", name);
+                    map.put("fullName", fullName);
+                    map.put("owner", owner);
+                    map.put("private", isPrivate);
+                    map.put("htmlUrl", htmlUrl);
+                    map.put("defaultBranch", defaultBranch);
+                    map.put("description", description);
+                    return map;
+                }).toList();
+
+                return ResponseEntity.ok(Map.of("repositories", formattedRepos));
             }
+        } catch (Exception e) {
+            System.err.println("[LocalGitHubController] Failed to query GitHub repos API: " + e.getMessage());
+            return ResponseEntity.status(502).body(Map.of("error", "GitHub API request failed: " + e.getMessage() + ". Please reconnect GitHub account."));
         }
 
         return ResponseEntity.ok(Map.of("repositories", List.of()));

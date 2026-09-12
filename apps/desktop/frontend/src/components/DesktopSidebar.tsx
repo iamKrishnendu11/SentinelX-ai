@@ -14,22 +14,26 @@ import {
   Menu,
   X,
   Lock,
+  CheckCircle2,
+  AlertTriangle,
 } from "lucide-react";
 import { useState } from "react";
 import { useGitHub } from "@/context/GitHubContext";
+import { useLocalAI } from "@/context/LocalAIContext";
 
 interface NavItem {
   name: string;
   href: string;
   icon: React.ElementType;
   requiresGitHub?: boolean;
+  requiresAI?: boolean;
 }
 
 const mainNavItems: NavItem[] = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Projects", href: "/projects", icon: FolderGit2, requiresGitHub: true },
-  { name: "Scans", href: "/scans", icon: Radar, requiresGitHub: true },
-  { name: "Vulnerabilities", href: "/vulnerabilities", icon: ShieldAlert, requiresGitHub: true },
+  { name: "Scans", href: "/scans", icon: Radar, requiresGitHub: true, requiresAI: true },
+  { name: "Vulnerabilities", href: "/vulnerabilities", icon: ShieldAlert, requiresGitHub: true, requiresAI: true },
 ];
 
 const secondaryNavItems: NavItem[] = [
@@ -40,6 +44,7 @@ const secondaryNavItems: NavItem[] = [
 export default function DesktopSidebar() {
   const pathname = usePathname();
   const { githubState } = useGitHub();
+  const { aiStatus } = useLocalAI();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const renderNavList = (items: NavItem[]) => (
@@ -47,7 +52,15 @@ export default function DesktopSidebar() {
       {items.map((item) => {
         const Icon = item.icon;
         const isActive = pathname === item.href;
-        const isLocked = item.requiresGitHub && !githubState.connected;
+        const isGitHubLocked = item.requiresGitHub && !githubState.connected;
+        const isAILocked = item.requiresAI && !aiStatus.ready;
+        const isLocked = isGitHubLocked || isAILocked;
+
+        const lockReason = isGitHubLocked
+          ? "Connect GitHub to unlock"
+          : isAILocked
+          ? "Setup Local AI Engine to unlock"
+          : "";
 
         return (
           <li key={item.href}>
@@ -68,7 +81,7 @@ export default function DesktopSidebar() {
               {isLocked ? (
                 <span
                   className="ml-auto px-1.5 py-0.5 rounded text-[9px] font-mono uppercase bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center gap-1"
-                  title="Connect GitHub to unlock"
+                  title={lockReason}
                 >
                   <Lock className="w-2.5 h-2.5" />
                   Locked
@@ -153,17 +166,31 @@ export default function DesktopSidebar() {
         <div className="p-4 border-t border-white/10 bg-[#050505]/60">
           <div className="rounded-lg p-3 bg-[#050505] border border-white/10 space-y-1.5">
             <div className="flex items-center gap-2">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-              </span>
-              <span className="text-xs font-mono font-semibold text-slate-200">
-                Local Engine Ready
-              </span>
+              {aiStatus.ready ? (
+                <>
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                  </span>
+                  <span className="text-xs font-mono font-semibold text-slate-200">
+                    AI Engine Ready
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span className="relative flex h-2 w-2">
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500" />
+                  </span>
+                  <span className="text-xs font-mono font-semibold text-amber-400">
+                    AI Engine Setup Needed
+                  </span>
+                </>
+              )}
             </div>
+
             <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-mono">
               <Cpu className="w-3 h-3 text-[#B7FF00]" />
-              <span>Offline Security Analysis</span>
+              <span>{aiStatus.ready ? "Ollama ✓ | Qwen 7B ✓" : "Local AI Environment Offline"}</span>
             </div>
           </div>
         </div>
@@ -171,3 +198,4 @@ export default function DesktopSidebar() {
     </>
   );
 }
+

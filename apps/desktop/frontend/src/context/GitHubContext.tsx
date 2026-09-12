@@ -7,6 +7,9 @@ import {
   initiateGitHubOAuth,
   disconnectGitHubConnection,
   fetchGitHubRepositories,
+  fetchProjectsApi,
+  createProjectApi,
+  deleteProjectApi,
 } from "@/services/githubApi";
 
 interface GitHubContextType {
@@ -18,7 +21,7 @@ interface GitHubContextType {
   setGitHubConnectionState: (state: GitHubConnection) => void;
   loadRepositories: () => Promise<{ repos: GitHubRepository[]; error?: string }>;
   addProject: (repo: GitHubRepository) => Promise<boolean>;
-  removeProject: (projectId: string) => void;
+  removeProject: (projectId: string) => Promise<void>;
   logout: () => void;
   clearError: () => void;
 }
@@ -38,14 +41,23 @@ export function GitHubProvider({ children }: { children: React.ReactNode }) {
   const [projects, setProjects] = useState<Project[]>([]);
   const [isConnecting, setIsConnecting] = useState(false);
 
-  // Check initial GitHub status on mount
+  // Load projects from backend SQLite database
+  const loadProjectsFromBackend = useCallback(async () => {
+    const loadedProjects = await fetchProjectsApi();
+    setProjects(loadedProjects);
+  }, []);
+
+  // Check initial GitHub status and load existing projects on mount
   useEffect(() => {
-    async function checkStatus() {
+    async function initWorkspace() {
       const status = await fetchGitHubStatus();
       setGithubState(status);
+      if (status.connected) {
+        await loadProjectsFromBackend();
+      }
     }
-    checkStatus();
-  }, []);
+    initWorkspace();
+  }, [loadProjectsFromBackend]);
 
   const connectGitHub = useCallback(async () => {
     setIsConnecting(true);
@@ -87,13 +99,16 @@ export function GitHubProvider({ children }: { children: React.ReactNode }) {
       status: "disconnected",
       errorMessage: null,
     });
-    // Clear project associations from session
+    // Clear project associations
     setProjects([]);
   }, []);
 
-  const setGitHubConnectionState = useCallback((newState: GitHubConnection) => {
+  const setGitHubConnectionState = useCallback(async (newState: GitHubConnection) => {
     setGithubState(newState);
-  }, []);
+    if (newState.connected) {
+      await loadProjectsFromBackend();
+    }
+  }, [loadProjectsFromBackend]);
 
   const loadRepositories = useCallback(async () => {
     if (!githubState.connected) {
@@ -107,31 +122,29 @@ export function GitHubProvider({ children }: { children: React.ReactNode }) {
       if (!githubState.connected) {
         return false;
       }
-      const newProject: Project = {
-        id: `proj_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
-        repositoryId: repo.id,
-        repositoryName: repo.name,
-        owner: repo.owner,
-        private: repo.private,
-        defaultBranch: repo.defaultBranch || "main",
-        connectedAt: new Date().toISOString(),
-      };
-      setProjects((prev) => [...prev, newProject]);
-      return true;
+
+      const createdProject = await createProjectApi(repo);
+      if (createdProject) {
+        setProjects((prev) => {
+          // Avoid duplicate entries
+          const filtered = prev.filter((p) => p.id !== createdProject.id && p.repositoryId !== createdProject.repositoryId);
+          return [...filtered, createdProject];
+        });
+        return true;
+      }
+      return false;
     },
     [githubState.connected]
   );
 
-  const removeProject = useCallback((projectId: string) => {
+  const removeProject = useCallback(async (projectId: string) => {
     setProjects((prev) => prev.filter((p) => p.id !== projectId));
+    await deleteProjectApi(projectId);
   }, []);
 
   const logout = useCallback(() => {
-    // 1. Clear active GitHub connection state
     setGithubState(initialGitHubState);
-    // 2. Clear connected project associations from current Sentinel-X session
     setProjects([]);
-    // 3. Remove OAuth temporary state
     if (typeof window !== "undefined") {
       sessionStorage.removeItem("github_oauth_state");
     }

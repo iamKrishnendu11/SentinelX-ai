@@ -12,7 +12,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api")
 public class HealthController {
 
     private final JdbcTemplate jdbcTemplate;
@@ -21,7 +20,16 @@ public class HealthController {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    @GetMapping("/health")
+    @GetMapping("/")
+    public ResponseEntity<Map<String, Object>> rootInfo() {
+        Map<String, Object> response = new HashMap<>();
+        response.put("service", "Sentinel-X Website Backend");
+        response.put("status", "UP");
+        response.put("health", "/api/health");
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/api/health")
     public ResponseEntity<Map<String, Object>> checkHealth() {
         Map<String, Object> response = new HashMap<>();
         response.put("service", "Sentinel-X Website Backend");

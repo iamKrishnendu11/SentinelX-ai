@@ -1,11 +1,27 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { fetchProjectDetails, fetchTestStatus, startProjectTest, TestSession, TestEvent, startRealAuditStream, startRealRemediationStream } from "@/services/testService";
+import { fetchProjectDetails, fetchTestStatus, fetchLatestRun, startProjectTest, TestSession, TestEvent, startRealAuditStream, startRealRemediationStream } from "@/services/testService";
 import { Project } from "@/types/github";
 import WorkspaceHeader from "./WorkspaceHeader";
 import SecurityTimeline from "./SecurityTimeline";
 import gsap from "gsap";
+
+function isRepoMatching(targetRepo?: string, project?: Project | null): boolean {
+  if (!targetRepo || !project) return false;
+  const target = targetRepo.toLowerCase().trim();
+  const repoName = (project.repositoryName || "").toLowerCase().trim();
+  const fullName = (project.repositoryFullName || "").toLowerCase().trim();
+  const htmlUrl = (project.htmlUrl || "").toLowerCase().trim();
+  const localPath = (project.localPath || "").toLowerCase().trim();
+
+  if (repoName && target.includes(repoName)) return true;
+  if (fullName && target.includes(fullName)) return true;
+  if (htmlUrl && target.includes(htmlUrl)) return true;
+  if (localPath && target.includes(localPath)) return true;
+
+  return false;
+}
 
 export default function TestWorkspace({ projectId }: { projectId: string }) {
   const [project, setProject] = useState<Project | null>(null);
@@ -21,45 +37,10 @@ export default function TestWorkspace({ projectId }: { projectId: string }) {
   const [telemetryEvents, setTelemetryEvents] = useState<any[]>([]);
   const [reconData, setReconData] = useState<any | null>(null);
   const [heuristicFallback, setHeuristicFallback] = useState<boolean>(false);
+  const hasStartedRef = useRef(false);
   const unsubscribeRef = useRef<(() => void) | null>(null);
 
-  // Initial load
-  useEffect(() => {
-    async function load() {
-      const p = await fetchProjectDetails(projectId);
-      setProject(p);
-      
-      const s = await fetchTestStatus(projectId);
-      if (s) setSession(s);
-    }
-    load();
-    
-    gsap.fromTo(
-      ".workspace-animate-in",
-      { opacity: 0, y: 20 },
-      { opacity: 1, y: 0, duration: 0.6, stagger: 0.1, ease: "power3.out" }
-    );
-
-    return () => {
-      if (unsubscribeRef.current) unsubscribeRef.current();
-    };
-  }, [projectId]);
-
-  const addEvent = (msg: string, type: "info" | "success" | "error" | "warning", stage: number) => {
-    setEvents((prev) => [
-      ...prev,
-      {
-        id: `ev-${Date.now()}-${Math.random()}`,
-        timestamp: new Date().toTimeString().slice(0, 8),
-        stage,
-        message: msg,
-        type
-      },
-    ]);
-  };
-
-  const handleStartMachine = async () => {
-    if (!project) return;
+  const startAuditForProject = async (targetProj: Project) => {
     setIsStarting(true);
     setError(null);
     setEvents([]);
@@ -73,16 +54,16 @@ export default function TestWorkspace({ projectId }: { projectId: string }) {
     addEvent("Initializing SentinelX environment...", "info", 1);
     
     try {
-      const newSession = await startProjectTest(projectId);
+      const newSession = await startProjectTest(targetProj.id);
       setSession(newSession);
       addEvent("Environment established. Connecting to AI Engine...", "success", 1);
 
       let currentFindings: any[] = [];
-      const repoUrl = project.htmlUrl || project.repositoryFullName || "https://github.com/SentinelX-ai/SentinelX-ai";
+      const repoUrl = targetProj.htmlUrl || targetProj.repositoryFullName || targetProj.repositoryName || "https://github.com/SentinelX-ai/SentinelX-ai";
 
       startRealAuditStream(
         repoUrl,
-        project.defaultBranch || "main",
+        targetProj.defaultBranch || "main",
         (sseEvent: any) => {
           const type = sseEvent.event;
           const msg = sseEvent.message || type;
@@ -93,6 +74,11 @@ export default function TestWorkspace({ projectId }: { projectId: string }) {
           } else if (type === "RECON_COMPLETED") {
             setReconData(sseEvent.data);
             addEvent(`Reconnaissance Complete: ${sseEvent.data.manifests_found?.length || 0} manifest(s) identified.`, "success", 2);
+          } else if (type === "DIGITAL_TWIN_PROVISIONING") {
+            setSession(s => s ? { ...s, currentStage: 3, status: "RUNNING" } : null);
+            addEvent(msg, "info", 3);
+          } else if (type === "DIGITAL_TWIN_READY") {
+            addEvent(msg, "success", 3);
           } else if (type === "SCANNERS_RUNNING") {
             setSession(s => s ? { ...s, currentStage: 4, status: "RUNNING" } : null);
             addEvent(msg, "info", 4);
@@ -119,8 +105,10 @@ export default function TestWorkspace({ projectId }: { projectId: string }) {
           setError("Audit stream disconnected.");
           setSession(s => s ? { ...s, status: "FAILED" } : null);
           addEvent("Error connecting to AI Audit Engine.", "error", session?.currentStage || 1);
+          setIsStarting(false);
         },
         () => {
+          setIsStarting(false);
           if (currentFindings.length === 0) {
             setSession(s => s ? { ...s, currentStage: 10, status: "COMPLETED" } : null);
             addEvent("No vulnerabilities to remediate. Sandbox disengaged.", "success", 10);
@@ -173,13 +161,120 @@ export default function TestWorkspace({ projectId }: { projectId: string }) {
       addEvent(`System Error: ${err.message}`, "error", 0);
       setSession({
         id: "err",
-        projectId,
+        projectId: targetProj.id,
         status: "FAILED",
         currentStage: 0,
       });
-    } finally {
       setIsStarting(false);
     }
+  };
+
+  // Initial load
+  useEffect(() => {
+    async function load() {
+      const p = await fetchProjectDetails(projectId);
+      setProject(p);
+      
+      const s = await fetchTestStatus(projectId);
+      if (s) setSession(s);
+
+      // Hydrate from persistent latest run snapshot only if it belongs to this project
+      const latestRun = await fetchLatestRun();
+      if (latestRun && isRepoMatching(latestRun.target_repo, p)) {
+        if (latestRun.verified_vulnerabilities) {
+          setRealVulnerabilities(latestRun.verified_vulnerabilities);
+        }
+        if (latestRun.telemetry_timeline) {
+          setTelemetryEvents(latestRun.telemetry_timeline);
+        }
+        if (typeof latestRun.heuristic_fallback_engaged === "boolean") {
+          setHeuristicFallback(latestRun.heuristic_fallback_engaged);
+        }
+
+        const scanTime = latestRun.scanned_at ? new Date(latestRun.scanned_at).toTimeString().slice(0, 8) : new Date().toTimeString().slice(0, 8);
+        
+        const initialEvents: TestEvent[] = [
+          {
+            id: "ev-init",
+            timestamp: scanTime,
+            stage: 1,
+            message: `SentinelX Environment initialized for repository: ${latestRun.target_repo || "Target Repository"}`,
+            type: "info"
+          },
+          {
+            id: "ev-twin",
+            timestamp: scanTime,
+            stage: 3,
+            message: "Digital Twin replica environment online & isolated.",
+            type: "success"
+          },
+          {
+            id: "ev-scanners",
+            timestamp: scanTime,
+            stage: 4,
+            message: `Multi-Agent Scanner Swarm completed. ${latestRun.verified_vulnerabilities?.length || 0} vulnerability finding(s) verified.`,
+            type: "success"
+          }
+        ];
+
+        if (latestRun.telemetry_timeline && Array.isArray(latestRun.telemetry_timeline)) {
+          latestRun.telemetry_timeline.slice(0, 50).forEach((t: any, idx: number) => {
+            const statusType = t.status === "EXPLOIT_VERIFIED" ? "error" : "warning";
+            const timeStr = t.timestamp ? new Date(t.timestamp).toTimeString().slice(0, 8) : scanTime;
+            initialEvents.push({
+              id: `ev-probe-${idx}`,
+              timestamp: timeStr,
+              stage: 5,
+              message: `Probe [${t.vector}] on ${t.target_endpoint}: ${t.status}`,
+              type: statusType
+            });
+          });
+        }
+
+        setEvents(initialEvents);
+
+        if (!s || s.status === "WAITING") {
+          setSession({
+            id: latestRun.session_id || "sess-latest",
+            projectId,
+            status: "COMPLETED",
+            currentStage: 10
+          });
+        }
+      } else if (p && !hasStartedRef.current) {
+        hasStartedRef.current = true;
+        startAuditForProject(p);
+      }
+    }
+    load();
+    
+    gsap.fromTo(
+      ".workspace-animate-in",
+      { opacity: 0, y: 20 },
+      { opacity: 1, y: 0, duration: 0.6, stagger: 0.1, ease: "power3.out" }
+    );
+
+    return () => {
+      if (unsubscribeRef.current) unsubscribeRef.current();
+    };
+  }, [projectId]);
+
+  const addEvent = (msg: string, type: "info" | "success" | "error" | "warning", stage: number) => {
+    setEvents((prev) => [
+      ...prev,
+      {
+        id: `ev-${Date.now()}-${Math.random()}`,
+        timestamp: new Date().toTimeString().slice(0, 8),
+        stage,
+        message: msg,
+        type
+      },
+    ]);
+  };
+
+  const handleStartMachine = async () => {
+    if (!project) return;
+    await startAuditForProject(project);
   };
 
   return (

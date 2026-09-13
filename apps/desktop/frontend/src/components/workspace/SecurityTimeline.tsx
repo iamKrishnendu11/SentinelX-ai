@@ -158,7 +158,7 @@ export default function SecurityTimeline({
 
                   {index === 2 && (
                     <div className="w-full max-w-3xl h-[350px]">
-                      <LiveEventConsole events={events.filter(e => e.stage <= 3)} />
+                      <LiveEventConsole events={events} />
                     </div>
                   )}
 

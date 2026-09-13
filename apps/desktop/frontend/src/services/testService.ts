@@ -73,6 +73,21 @@ export async function fetchTestStatus(projectId: string): Promise<TestSession | 
   }
 }
 
+export async function fetchLatestRun(): Promise<any | null> {
+  try {
+    const response = await fetch(`${PYTHON_API_URL}/api/v1/audit/latest-run`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (!response.ok) return null;
+    return await response.json();
+  } catch (error) {
+    console.error("Failed to fetch latest audit run snapshot:", error);
+    return null;
+  }
+}
+
 export function startRealAuditStream(repoUrl: string, branch: string, onEvent: (event: any) => void, onError: (err: any) => void, onComplete: () => void): EventSource {
   const url = `${PYTHON_API_URL}/api/v1/audit/scan/stream?repo_url=${encodeURIComponent(repoUrl)}&branch=${encodeURIComponent(branch)}`;
   const eventSource = new EventSource(url);

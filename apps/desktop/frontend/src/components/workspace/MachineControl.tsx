@@ -36,18 +36,18 @@ export default function MachineControl({
 
           <button
             onClick={onStart}
-            disabled={isStarting || isRunning}
+            disabled={isStarting}
             className="px-6 py-2.5 rounded-lg bg-[#B7FF00] text-[#050505] font-mono text-xs font-bold uppercase tracking-widest hover:bg-[#cfff4d] transition-all flex items-center gap-2 cursor-pointer shadow-[0_0_15px_rgba(183,255,0,0.2)] disabled:opacity-50 disabled:shadow-none disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-400"
           >
             {isStarting ? (
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : isRunning ? (
-              <Square className="w-4 h-4 fill-current" />
+              <Play className="w-4 h-4 fill-current" />
             ) : (
               <Play className="w-4 h-4 fill-current" />
             )}
             <span>
-              {isStarting ? "Starting..." : isRunning ? "Running" : "Start Machine"}
+              {isStarting ? "Starting..." : isRunning ? "Re-Run Machine" : "Start Machine"}
             </span>
           </button>
         </div>

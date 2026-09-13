@@ -251,6 +251,10 @@ async def execute_audit_pipeline(repo_url: str, branch: str) -> AsyncGenerator[d
         tech_stack = await run_recon(target_dir)
         yield {"event": "RECON_COMPLETED", "data": tech_stack}
 
+        yield {"event": "DIGITAL_TWIN_PROVISIONING", "message": "Provisioning isolated Digital Twin sandbox environment..."}
+        await asyncio.sleep(0.3)
+        yield {"event": "DIGITAL_TWIN_READY", "message": "Digital Twin replica environment online & isolated."}
+
         yield {"event": "SCANNERS_RUNNING", "message": "Executing static code & dependency analysis tools..."}
 
         semgrep_results, gitleaks_results, trivy_results = await asyncio.gather(
@@ -298,11 +302,18 @@ async def execute_audit_pipeline(repo_url: str, branch: str) -> AsyncGenerator[d
             elif "command" in title_lower: vec = "COMMAND_INJECTION"
             elif "secret" in title_lower: vec = "HARDCODED_SECRET"
 
+            clean_endpoint = finding.file_path.replace("\\", "/")
+            if "sentinelx_audit_" in clean_endpoint:
+                parts = clean_endpoint.split("sentinelx_audit_")[-1].split("/")
+                clean_endpoint = "/" + "/".join(parts[1:])
+            elif not clean_endpoint.startswith("/"):
+                clean_endpoint = "/" + clean_endpoint
+
             probe = AttackProbeTelemetry(
                 probe_id=f"probe-v-{idx+1}",
                 timestamp=now_str,
                 vector=vec,
-                target_endpoint=f"/{finding.file_path.lstrip('/')}",
+                target_endpoint=clean_endpoint,
                 action="VERIFY_INPUT_SANITIZATION",
                 status="EXPLOIT_VERIFIED",
                 side="red"

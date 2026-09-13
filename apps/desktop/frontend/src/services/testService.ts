@@ -88,6 +88,36 @@ export async function fetchLatestRun(): Promise<any | null> {
   }
 }
 
+export async function fetchScanHistory(): Promise<any[]> {
+  try {
+    const response = await fetch(`${PYTHON_API_URL}/api/v1/audit/scans`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (!response.ok) return [];
+    return await response.json();
+  } catch (error) {
+    console.error("Failed to fetch scan history:", error);
+    return [];
+  }
+}
+
+export async function fetchScanDetails(scanId: string): Promise<any | null> {
+  try {
+    const response = await fetch(`${PYTHON_API_URL}/api/v1/audit/scans/${encodeURIComponent(scanId)}`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (!response.ok) return null;
+    return await response.json();
+  } catch (error) {
+    console.error(`Failed to fetch scan details for ${scanId}:`, error);
+    return null;
+  }
+}
+
 export function startRealAuditStream(repoUrl: string, branch: string, onEvent: (event: any) => void, onError: (err: any) => void, onComplete: () => void): EventSource {
   const url = `${PYTHON_API_URL}/api/v1/audit/scan/stream?repo_url=${encodeURIComponent(repoUrl)}&branch=${encodeURIComponent(branch)}`;
   const eventSource = new EventSource(url);
@@ -196,4 +226,18 @@ export async function declinePatch(patchData: {
   });
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
   return await response.json();
+}
+
+export async function fetchApprovedPRs(): Promise<any[]> {
+  try {
+    const response = await fetch(`${PYTHON_API_URL}/api/v1/remediation/approved-prs`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
+    if (!response.ok) return [];
+    return await response.json();
+  } catch (error) {
+    console.error("Failed fetching approved PRs:", error);
+    return [];
+  }
 }

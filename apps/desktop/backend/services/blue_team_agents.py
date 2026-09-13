@@ -538,6 +538,43 @@ async def approve_single_patch(
         else:
             pr_url = f"https://github.com/SentinelX-ai/SentinelX-ai/pull/new/{branch_name}"
 
+    # Persist approved PR entry to disk
+    data_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data"))
+    os.makedirs(data_dir, exist_ok=True)
+    approved_prs_path = os.path.join(data_dir, "approved_prs.json")
+
+    approved_item = {
+        "finding_id": finding_id,
+        "file_path": file_path,
+        "patched_code": patched_code,
+        "cwe_id": cwe_id or "CWE-Security",
+        "vuln_title": vuln_title or f"Remediation for {file_path}",
+        "repo_url": repo_url or "https://github.com/iamKrishnendu11/GitGPT",
+        "github_branch": branch_name,
+        "pr_url": pr_url,
+        "applied_to_disk": applied,
+        "approved_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "status": "APPROVED"
+    }
+
+    try:
+        existing_prs = []
+        if os.path.exists(approved_prs_path):
+            try:
+                with open(approved_prs_path, "r", encoding="utf-8") as f:
+                    existing_prs = json.load(f)
+            except Exception:
+                existing_prs = []
+
+        # Deduplicate by finding_id / github_branch
+        existing_prs = [p for p in existing_prs if p.get("finding_id") != finding_id and p.get("github_branch") != branch_name]
+        existing_prs.insert(0, approved_item)
+
+        with open(approved_prs_path, "w", encoding="utf-8") as f:
+            json.dump(existing_prs, f, indent=2)
+    except Exception as e:
+        logger.error(f"Failed persisting approved PR snapshot: {e}")
+
     return {
         "finding_id": finding_id,
         "status": "APPROVED",

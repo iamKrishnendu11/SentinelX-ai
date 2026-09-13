@@ -373,12 +373,52 @@ async def execute_audit_pipeline(repo_url: str, branch: str) -> AsyncGenerator[d
 
         data_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data"))
         os.makedirs(data_dir, exist_ok=True)
+        scans_dir = os.path.join(data_dir, "scans")
+        os.makedirs(scans_dir, exist_ok=True)
+
+        snapshot_dict = snapshot.model_dump()
         latest_run_path = os.path.join(data_dir, "latest_run.json")
+        scan_file_path = os.path.join(scans_dir, f"{snapshot.session_id}.json")
+        history_path = os.path.join(data_dir, "scan_history.json")
+
         try:
+            # 1. Write latest run snapshot
             with open(latest_run_path, "w", encoding="utf-8") as f:
-                json.dump(snapshot.model_dump(), f, indent=2)
+                json.dump(snapshot_dict, f, indent=2)
+
+            # 2. Write individual scan snapshot file
+            with open(scan_file_path, "w", encoding="utf-8") as f:
+                json.dump(snapshot_dict, f, indent=2)
+
+            # 3. Update scan history index file
+            history = []
+            if os.path.exists(history_path):
+                try:
+                    with open(history_path, "r", encoding="utf-8") as f:
+                        history = json.load(f)
+                except Exception:
+                    history = []
+
+            # Deduplicate by session_id
+            history = [h for h in history if h.get("session_id") != snapshot.session_id]
+            
+            history_item = {
+                "session_id": snapshot.session_id,
+                "target_repo": repo_url,
+                "scanned_at": now_str,
+                "summary": snapshot_dict.get("summary", {}),
+                "vulnerability_count": len(verified_findings),
+                "duration_sec": scan_duration,
+                "heuristic_fallback_engaged": heuristic_fallback_engaged,
+                "status": "COMPLETED"
+            }
+            history.insert(0, history_item)
+
+            with open(history_path, "w", encoding="utf-8") as f:
+                json.dump(history, f, indent=2)
+
         except Exception as e:
-            logger.error(f"Failed writing latest_run.json snapshot: {e}")
+            logger.error(f"Failed writing scan snapshot to disk: {e}")
 
         yield {"event": "REPORT_READY", "data": report.model_dump()}
 

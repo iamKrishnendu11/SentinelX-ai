@@ -7,6 +7,7 @@ import {
   FolderGit2,
   Radar,
   ShieldAlert,
+  GitPullRequest,
   Settings,
   HelpCircle,
   Shield,
@@ -33,7 +34,7 @@ const mainNavItems: NavItem[] = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Projects", href: "/projects", icon: FolderGit2, requiresGitHub: true },
   { name: "Scans", href: "/scans", icon: Radar, requiresGitHub: true, requiresAI: true },
-  { name: "Vulnerabilities", href: "/vulnerabilities", icon: ShieldAlert, requiresGitHub: true, requiresAI: true },
+  { name: "Pull Requests", href: "/prs", icon: GitPullRequest, requiresGitHub: true, requiresAI: true },
 ];
 
 const secondaryNavItems: NavItem[] = [

@@ -1,7 +1,7 @@
 {
-  "session_id": "sess-ae3299fd",
+  "session_id": "sess-50989020",
   "target_repo": "https://github.com/iamKrishnendu11/GitGPT",
-  "scanned_at": "2026-09-13T04:50:29.335978Z",
+  "scanned_at": "2026-09-13T04:50:07.935980Z",
   "summary": {
     "total_probes": 11,
     "blocked_or_safe": 6,
@@ -11,7 +11,7 @@
   "telemetry_timeline": [
     {
       "probe_id": "probe-v-1",
-      "timestamp": "2026-09-13T04:50:29.335978Z",
+      "timestamp": "2026-09-13T04:50:07.935980Z",
       "vector": "SQLi",
       "target_endpoint": "/unknown_file",
       "action": "VERIFY_INPUT_SANITIZATION",
@@ -20,7 +20,7 @@
     },
     {
       "probe_id": "probe-v-2",
-      "timestamp": "2026-09-13T04:50:29.335978Z",
+      "timestamp": "2026-09-13T04:50:07.935980Z",
       "vector": "SQLi",
       "target_endpoint": "/unknown_file",
       "action": "VERIFY_INPUT_SANITIZATION",
@@ -29,7 +29,7 @@
     },
     {
       "probe_id": "probe-v-3",
-      "timestamp": "2026-09-13T04:50:29.335978Z",
+      "timestamp": "2026-09-13T04:50:07.935980Z",
       "vector": "SQLi",
       "target_endpoint": "/unknown_file",
       "action": "VERIFY_INPUT_SANITIZATION",
@@ -38,7 +38,7 @@
     },
     {
       "probe_id": "probe-v-4",
-      "timestamp": "2026-09-13T04:50:29.335978Z",
+      "timestamp": "2026-09-13T04:50:07.935980Z",
       "vector": "SQLi",
       "target_endpoint": "/unknown_file",
       "action": "VERIFY_INPUT_SANITIZATION",
@@ -47,7 +47,7 @@
     },
     {
       "probe_id": "probe-v-5",
-      "timestamp": "2026-09-13T04:50:29.335978Z",
+      "timestamp": "2026-09-13T04:50:07.935980Z",
       "vector": "SQLi",
       "target_endpoint": "/unknown_file",
       "action": "VERIFY_INPUT_SANITIZATION",
@@ -56,7 +56,7 @@
     },
     {
       "probe_id": "probe-c-1",
-      "timestamp": "2026-09-13T04:50:29.335978Z",
+      "timestamp": "2026-09-13T04:50:07.935980Z",
       "vector": "IDOR",
       "target_endpoint": "/api/v1/user",
       "action": "FUZZ_PARAMETER",
@@ -65,7 +65,7 @@
     },
     {
       "probe_id": "probe-c-2",
-      "timestamp": "2026-09-13T04:50:29.335978Z",
+      "timestamp": "2026-09-13T04:50:07.935980Z",
       "vector": "CSRF",
       "target_endpoint": "/api/v1/auth",
       "action": "CHECK_HEADER",
@@ -74,7 +74,7 @@
     },
     {
       "probe_id": "probe-c-3",
-      "timestamp": "2026-09-13T04:50:29.335978Z",
+      "timestamp": "2026-09-13T04:50:07.935980Z",
       "vector": "DESERIALIZATION",
       "target_endpoint": "/api/v1/ping",
       "action": "FUZZ_PARAMETER",
@@ -83,7 +83,7 @@
     },
     {
       "probe_id": "probe-c-4",
-      "timestamp": "2026-09-13T04:50:29.335978Z",
+      "timestamp": "2026-09-13T04:50:07.935980Z",
       "vector": "XSS",
       "target_endpoint": "/api/v1/upload",
       "action": "FUZZ_PARAMETER",
@@ -92,7 +92,7 @@
     },
     {
       "probe_id": "probe-c-5",
-      "timestamp": "2026-09-13T04:50:29.335978Z",
+      "timestamp": "2026-09-13T04:50:07.935980Z",
       "vector": "CORS",
       "target_endpoint": "/api/v1/user",
       "action": "CHECK_HEADER",
@@ -101,7 +101,7 @@
     },
     {
       "probe_id": "probe-c-7",
-      "timestamp": "2026-09-13T04:50:29.335978Z",
+      "timestamp": "2026-09-13T04:50:07.935980Z",
       "vector": "COMMAND_INJECTION",
       "target_endpoint": "/api/v1/ping",
       "action": "FUZZ_PARAMETER",
@@ -113,7 +113,7 @@
     {
       "id": "vuln-trivy-1",
       "scanner_source": "trivy",
-      "title": "Apache Tomcat: Apache Tomcat: Security constraint bypass due to improper access control",
+      "title": "Apache Tomcat: Security constraint bypass due to improper access control",
       "cwe_id": "CWE-284",
       "severity": "CRITICAL",
       "file_path": "unknown_file",

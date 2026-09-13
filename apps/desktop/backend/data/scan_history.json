@@ -1,5 +1,35 @@
 [
   {
+    "session_id": "sess-ae3299fd",
+    "target_repo": "https://github.com/iamKrishnendu11/GitGPT",
+    "scanned_at": "2026-09-13T04:50:29.335978Z",
+    "summary": {
+      "total_probes": 11,
+      "blocked_or_safe": 6,
+      "verified_exploits": 5,
+      "security_score": 5
+    },
+    "vulnerability_count": 5,
+    "duration_sec": 207.73,
+    "heuristic_fallback_engaged": false,
+    "status": "COMPLETED"
+  },
+  {
+    "session_id": "sess-50989020",
+    "target_repo": "https://github.com/iamKrishnendu11/GitGPT",
+    "scanned_at": "2026-09-13T04:50:07.935980Z",
+    "summary": {
+      "total_probes": 11,
+      "blocked_or_safe": 6,
+      "verified_exploits": 5,
+      "security_score": 5
+    },
+    "vulnerability_count": 5,
+    "duration_sec": 186.72,
+    "heuristic_fallback_engaged": false,
+    "status": "COMPLETED"
+  },
+  {
     "session_id": "sess-065314fb",
     "target_repo": "https://github.com/iamKrishnendu11/GitGPT",
     "scanned_at": "2026-09-13T03:57:56.852017Z",

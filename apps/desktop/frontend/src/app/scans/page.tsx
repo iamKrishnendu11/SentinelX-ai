@@ -313,7 +313,7 @@ export default function ScansPage() {
                             </div>
 
                             <Link
-                              href={`/scans/${scan.session_id}`}
+                              href={`/scans/details?id=${scan.session_id}`}
                               className="px-4 py-2 rounded-lg bg-[#050505] border border-white/10 text-[#B7FF00] hover:bg-[#B7FF00] hover:text-[#050505] font-mono text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer shadow-lg"
                             >
                               <span>View Full Report</span>

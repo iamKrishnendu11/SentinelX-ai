@@ -93,7 +93,7 @@ export default function ProjectsSection() {
                 </div>
 
                 <div className="flex items-center gap-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Link href={`/dashboard/test/${project.id}`}>
+                  <Link href={`/dashboard/test?projectId=${project.id}`}>
                     <PrimaryButton testId={`btn-start-${project.id}`}>
                       START TEST
                     </PrimaryButton>

@@ -491,6 +491,97 @@ async def execute_remediation_pipeline(
         "data": report.model_dump()
     }
 
+def get_github_token_from_system() -> Optional[str]:
+    """
+    Retrieves GitHub token from environment variables or local Windows git credential manager.
+    """
+    token = os.getenv("GITHUB_TOKEN") or os.getenv("GH_TOKEN")
+    if token:
+        return token.strip()
+    try:
+        res = subprocess.run(
+            ["git", "credential", "fill"],
+            input="protocol=https\nhost=github.com\n\n",
+            capture_output=True, text=True, errors="ignore", timeout=5
+        )
+        for line in res.stdout.splitlines():
+            if line.startswith("password="):
+                pwd = line.split("=", 1)[1].strip()
+                if pwd:
+                    return pwd
+    except Exception as e:
+        logger.warning(f"Git credential lookup error: {e}")
+    return None
+
+def create_github_pull_request_api(
+    repo_url: str,
+    head_branch: str,
+    base_branch: str = "main",
+    title: str = "Security Fix",
+    body: str = "",
+    github_token: Optional[str] = None
+) -> Optional[str]:
+    """
+    Directly creates a Pull Request on GitHub using GitHub REST API v3.
+    Returns the official PR html_url (e.g. https://github.com/owner/repo/pull/1) or None.
+    """
+    if not repo_url:
+        return None
+
+    clean_url = repo_url.strip().rstrip("/").replace(".git", "")
+    match = re.search(r"github\.com/([^/]+)/([^/]+)", clean_url)
+    if not match:
+        return None
+
+    owner, repo = match.group(1), match.group(2)
+    api_url = f"https://api.github.com/repos/{owner}/{repo}/pulls"
+
+    token = github_token or get_github_token_from_system()
+
+    headers = {
+        "Accept": "application/vnd.github.v3+json",
+        "Content-Type": "application/json",
+        "User-Agent": "SentinelX-Desktop"
+    }
+    if token:
+        headers["Authorization"] = f"token {token}"
+
+    payload = {
+        "title": title,
+        "head": head_branch,
+        "base": base_branch,
+        "body": body or f"## 🛡️ SentinelX AI Security Patch\n\n- **Title**: {title}\n- **Branch**: `{head_branch}`\n\n*Automated Pull Request created by SentinelX Blue Team Defense Agent.*"
+    }
+
+    try:
+        req = urllib.request.Request(api_url, data=json.dumps(payload).encode("utf-8"), headers=headers, method="POST")
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            pr_html_url = data.get("html_url")
+            logger.info(f"Successfully created GitHub PR directly via REST API: {pr_html_url}")
+            return pr_html_url
+    except urllib.error.HTTPError as e:
+        logger.warning(f"GitHub API create PR returned HTTP {e.code}: {e.reason}")
+        res_body = e.read().decode("utf-8", errors="ignore")
+        
+        # If PR already exists (HTTP 422), query existing PR for this head branch
+        if e.code == 422 or "already exists" in res_body.lower():
+            list_url = f"https://api.github.com/repos/{owner}/{repo}/pulls?head={owner}:{head_branch}&state=all"
+            req_list = urllib.request.Request(list_url, headers=headers, method="GET")
+            try:
+                with urllib.request.urlopen(req_list, timeout=15) as list_resp:
+                    prs = json.loads(list_resp.read().decode("utf-8"))
+                    if prs and len(prs) > 0:
+                        pr_html_url = prs[0].get("html_url")
+                        logger.info(f"Retrieved existing open GitHub PR URL: {pr_html_url}")
+                        return pr_html_url
+            except Exception as ex:
+                logger.warning(f"Failed querying existing PR list: {ex}")
+    except Exception as e:
+        logger.warning(f"Failed calling GitHub PR creation REST API: {e}")
+
+    return None
+
 async def approve_single_patch(
     finding_id: str,
     file_path: str,
@@ -506,7 +597,7 @@ async def approve_single_patch(
     1. Creates a git security branch (sentinelx/fix-[id])
     2. Writes patched code to target file
     3. Commits change
-    4. Pushes branch to GitHub remote and constructs Pull Request URL
+    4. Pushes branch to GitHub remote and directly creates Pull Request via GitHub REST API
     """
     clean_id = re.sub(r'[^a-zA-Z0-9_-]', '', finding_id)
     branch_name = f"sentinelx/fix-{clean_id}"
@@ -530,6 +621,21 @@ async def approve_single_patch(
         official_pr_url = await git_commit_and_push_patch(resolved_repo_path, branch_name, file_path, commit_msg)
         if official_pr_url:
             pr_url = official_pr_url
+
+    # Attempt direct automated Pull Request creation via GitHub REST API
+    target_repo = repo_url or "https://github.com/iamKrishnendu11/GitGPT"
+    direct_pr_url = await asyncio.to_thread(
+        create_github_pull_request_api,
+        target_repo,
+        branch_name,
+        "main",
+        commit_msg,
+        f"## 🛡️ SentinelX AI Security Remediation Patch\n\n- **Vulnerability**: {vuln_title or file_path}\n- **CWE**: {cwe_id or 'CWE-Security'}\n- **File**: `{file_path}`\n\n*Automated Pull Request created by SentinelX Blue Team Defense Agent.*",
+        github_token
+    )
+
+    if direct_pr_url:
+        pr_url = direct_pr_url
 
     if not pr_url:
         target_repo_clean = (repo_url or "").strip().rstrip(".git")
@@ -581,7 +687,7 @@ async def approve_single_patch(
         "applied_to_disk": applied,
         "github_branch": branch_name,
         "pr_url": pr_url,
-        "message": f"Patch approved! Branch '{branch_name}' created and pushed to GitHub."
+        "message": f"Patch approved! Pull Request '{pr_url}' created on GitHub."
     }
 
 

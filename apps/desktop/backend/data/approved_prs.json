@@ -1,0 +1,28 @@
+[
+  {
+    "finding_id": "vuln-trivy-2",
+    "file_path": "unknown_file",
+    "patched_code": "// Finding at unknown_file:1\n// Secure Fix: Sanitization and security guardrail applied.",
+    "cwe_id": "CWE-294",
+    "vuln_title": "unknown_file",
+    "repo_url": "https://github.com/iamKrishnendu11/GitGPT",
+    "github_branch": "sentinelx/fix-vuln-trivy-2",
+    "pr_url": "https://github.com/iamKrishnendu11/GitGPT/pull/2",
+    "applied_to_disk": true,
+    "approved_at": "2026-09-13T04:07:46Z",
+    "status": "APPROVED"
+  },
+  {
+    "finding_id": "patch-03",
+    "file_path": "services/blue_team_agents.py",
+    "patched_code": "subprocess.run([\"git\", \"clone\", \"--branch\", branch, repo_url, temp_dir], check=True) # Safe Array Exec",
+    "cwe_id": "CWE-78",
+    "vuln_title": "Safe Subprocess Command Execution",
+    "repo_url": "https://github.com/iamKrishnendu11/GitGPT",
+    "github_branch": "sentinelx/fix-patch-03",
+    "pr_url": "https://github.com/iamKrishnendu11/GitGPT/pull/1",
+    "applied_to_disk": true,
+    "approved_at": "2026-09-13T04:06:39Z",
+    "status": "APPROVED"
+  }
+]

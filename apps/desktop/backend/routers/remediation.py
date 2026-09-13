@@ -110,7 +110,7 @@ async def get_approved_prs():
                 "vuln_title": "Safe Subprocess Command Execution",
                 "repo_url": "https://github.com/iamKrishnendu11/GitGPT",
                 "github_branch": "sentinelx/fix-patch-03",
-                "pr_url": "https://github.com/iamKrishnendu11/GitGPT/pull/new/sentinelx/fix-patch-03",
+                "pr_url": "https://github.com/iamKrishnendu11/GitGPT/pull/1",
                 "applied_to_disk": True,
                 "approved_at": "2026-09-13T07:55:00Z",
                 "status": "APPROVED"

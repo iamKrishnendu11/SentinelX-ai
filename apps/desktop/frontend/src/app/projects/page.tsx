@@ -165,7 +165,7 @@ export default function ProjectsPage() {
                         </div>
 
                         <div className="flex items-center justify-between gap-4">
-                          <Link href={`/dashboard/test/${project.id}`} className="flex-1">
+                          <Link href={`/dashboard/test?projectId=${project.id}`} className="flex-1">
                             <PrimaryButton className="w-full justify-center">
                               START TEST
                             </PrimaryButton>

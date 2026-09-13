@@ -40,14 +40,8 @@ const Navbar = ({ onScan }: any) => {
         setUserMenuOpen(false);
     };
 
-    const handleLaunch = async () => {
-        const res = await fetch('/api/server/launch', { method: 'POST' });
-        if (res.ok) {
-            const data = await res.json();
-            alert(data.message + "\n" + data.serverUrl);
-        } else {
-            alert('Failed to launch server');
-        }
+    const handleLaunch = () => {
+        window.location.href = '/api/download/windows';
     };
 
     useMotionValueEvent(scrollY, "change", (latest) => {

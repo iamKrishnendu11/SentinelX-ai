@@ -18,7 +18,7 @@ export default function DownloadSection({ id = "download" }: DownloadSectionProp
   const sectionRef = useRef<HTMLDivElement>(null);
 
   const downloadConfig = {
-    windows: process.env.NEXT_PUBLIC_WINDOWS_DOWNLOAD_URL || "",
+    windows: process.env.NEXT_PUBLIC_WINDOWS_DOWNLOAD_URL || "/api/download/windows",
     macos: process.env.NEXT_PUBLIC_MACOS_DOWNLOAD_URL || "",
     linux: process.env.NEXT_PUBLIC_LINUX_DOWNLOAD_URL || "",
   };

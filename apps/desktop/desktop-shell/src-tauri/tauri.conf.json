@@ -1,0 +1,62 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "SentinelX Desktop",
+  "version": "1.0.0",
+  "identifier": "com.sentinelx.desktop",
+  "build": {
+    "devUrl": "http://localhost:3001",
+    "frontendDist": "../../frontend/out",
+    "beforeDevCommand": "",
+    "beforeBuildCommand": "npm run build:tauri"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Sentinel-X Desktop",
+        "width": 1400,
+        "height": 900,
+        "minWidth": 1024,
+        "minHeight": 720,
+        "resizable": true,
+        "fullscreen": false,
+        "center": true,
+        "decorations": true,
+        "transparent": false
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self' http://localhost:8000 http://localhost:8081 http://localhost:11434 ws://localhost:*; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:;"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "publisher": "SentinelX AI Security",
+    "copyright": "Copyright © 2026 SentinelX AI Security",
+    "category": "Developer Tool",
+    "shortDescription": "Autonomous DevSecOps & AI Red Team Desktop Workspace",
+    "longDescription": "SentinelX Desktop provides an offline-first autonomous security workspace for discovering, remediating, and verifying application security vulnerabilities locally.",
+    "resources": [
+      "bin/sentinelx-python-engine*",
+      "bin/sentinelx-java-engine*"
+    ],
+    "windows": {
+      "certificateThumbprint": null,
+      "digestAlgorithm": "sha256",
+      "timestampUrl": "",
+      "nsis": {
+        "installMode": "currentUser",
+        "headerImage": null,
+        "sidebarImage": null,
+        "installerIcon": null
+      }
+    }
+  }
+}

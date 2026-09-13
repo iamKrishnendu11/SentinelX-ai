@@ -43,5 +43,6 @@ def serve_testing_page():
     return FileResponse(os.path.abspath(os.path.join(os.path.dirname(__file__), "index.html")))
 
 @app.get("/health")
+@app.get("/api/health")
 def health_check():
     return {"status": "ok", "service": "SentinelX Desktop Backend"}

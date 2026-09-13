@@ -35,5 +35,13 @@ public class LocalScanController {
         return ResponseEntity.ok(vulns);
     }
 
+    @GetMapping("/health")
+    public ResponseEntity<String> getHealth() {
+        return ResponseEntity.ok("OK");
+    }
 
+    @GetMapping("/api/health")
+    public ResponseEntity<String> getApiHealth() {
+        return ResponseEntity.ok("OK");
+    }
 }

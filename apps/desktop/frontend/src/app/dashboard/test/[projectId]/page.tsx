@@ -1,4 +1,13 @@
-import TestWorkspace from "@/components/workspace/TestWorkspace";
+import TestWorkspaceClient from "./TestWorkspaceClient";
+
+export async function generateStaticParams() {
+  return [
+    { projectId: "latest" },
+    { projectId: "p-01" },
+    { projectId: "p-02" },
+    { projectId: "p-03" },
+  ];
+}
 
 export default async function TestWorkspacePage({
   params,
@@ -6,12 +15,5 @@ export default async function TestWorkspacePage({
   params: Promise<{ projectId: string }>;
 }) {
   const resolvedParams = await params;
-  
-  return (
-    <div className="min-h-screen bg-ink text-slate-100 font-sans antialiased selection:bg-lime selection:text-ink">
-      <main className="w-full min-h-screen p-4 md:p-8 flex flex-col">
-        <TestWorkspace projectId={resolvedParams.projectId} />
-      </main>
-    </div>
-  );
+  return <TestWorkspaceClient projectId={resolvedParams.projectId} />;
 }

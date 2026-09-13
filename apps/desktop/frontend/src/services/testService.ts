@@ -165,3 +165,35 @@ export async function startRealRemediationStream(findings: any[], repoPath: stri
     throw error;
   }
 }
+
+export async function approvePatch(patchData: {
+  finding_id: string;
+  file_path: string;
+  patched_code: string;
+  cwe_id?: string;
+  vuln_title?: string;
+  repo_url?: string;
+}): Promise<any> {
+  const url = `${PYTHON_API_URL}/api/v1/remediation/approve`;
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(patchData),
+  });
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  return await response.json();
+}
+
+export async function declinePatch(patchData: {
+  finding_id: string;
+  file_path: string;
+}): Promise<any> {
+  const url = `${PYTHON_API_URL}/api/v1/remediation/decline`;
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(patchData),
+  });
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  return await response.json();
+}

@@ -128,7 +128,21 @@ export default function TestWorkspace({ projectId }: { projectId: string }) {
               addEvent(remEvent.data, "warning", 8);
             } else if (rType === "REMEDIATION_REPORT_READY") {
               const patches = remEvent.data.patches || [];
-              setRealPatches(patches);
+              const mappedPatches = patches.map((p: any) => ({
+                id: p.finding_id || p.id,
+                vulnTitle: p.developer_note?.summary || p.file_path,
+                filePath: p.file_path,
+                cwe: p.cwe_id || "CWE-Security",
+                originalSnippet: p.original_snippet || "",
+                patchedCode: p.patched_snippet || "",
+                syntaxValid: p.syntax_valid ?? true,
+                appliedToDisk: p.applied_to_disk ?? false,
+                diffSummary: p.git_diff || "Patch applied.",
+                status: p.status || "PENDING",
+                prUrl: p.pr_url,
+                repoUrl: repoUrl,
+              }));
+              setRealPatches(mappedPatches);
               
               const notes = patches.map((p: any) => ({
                 id: p.finding_id,
@@ -138,7 +152,8 @@ export default function TestWorkspace({ projectId }: { projectId: string }) {
                 rootCause: p.developer_note?.root_cause || "N/A",
                 remediationApplied: p.developer_note?.remediation_applied || "N/A",
                 verificationSteps: p.developer_note?.verification_steps || "N/A",
-                status: p.syntax_valid ? "VERIFIED_IN_TWIN" : "FAILED"
+                status: p.syntax_valid ? "VERIFIED_IN_TWIN" : "FAILED",
+                patchedCode: p.patched_snippet
               }));
               setRealDevNotes(notes);
               

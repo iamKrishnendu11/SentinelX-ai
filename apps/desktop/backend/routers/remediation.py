@@ -2,8 +2,8 @@ import json
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 
-from schemas.remediation import RemediationRequest, RemediationReport
-from services.blue_team_agents import execute_remediation_pipeline
+from schemas.remediation import RemediationRequest, RemediationReport, ApprovePatchRequest, DeclinePatchRequest
+from services.blue_team_agents import execute_remediation_pipeline, approve_single_patch
 
 router = APIRouter(prefix="/api/v1/remediation", tags=["Blue Team Remediation"])
 
@@ -54,3 +54,31 @@ async def stream_remediation_patches(request: RemediationRequest):
             "X-Accel-Buffering": "no"
         }
     )
+
+@router.post("/approve")
+async def approve_patch(request: ApprovePatchRequest):
+    """
+    Approve a security patch, create git security branch, and generate GitHub Pull Request URL.
+    """
+    result = await approve_single_patch(
+        finding_id=request.finding_id,
+        file_path=request.file_path,
+        patched_code=request.patched_code,
+        repo_path=request.repo_path,
+        repo_url=request.repo_url,
+        cwe_id=request.cwe_id,
+        vuln_title=request.vuln_title,
+        github_token=request.github_token
+    )
+    return result
+
+@router.post("/decline")
+async def decline_patch(request: DeclinePatchRequest):
+    """
+    Decline a security patch.
+    """
+    return {
+        "finding_id": request.finding_id,
+        "status": "DECLINED",
+        "message": "Patch declined by user."
+    }

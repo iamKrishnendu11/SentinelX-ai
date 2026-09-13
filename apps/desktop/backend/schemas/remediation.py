@@ -24,6 +24,24 @@ class PatchItem(BaseModel):
     backup_file_path: Optional[str] = None
     error_details: Optional[str] = None
     fallback_used: bool = False
+    status: str = "PENDING"  # PENDING, APPROVED, DECLINED
+    pr_url: Optional[str] = None
+    github_branch: Optional[str] = None
+
+class ApprovePatchRequest(BaseModel):
+    finding_id: str
+    repo_path: Optional[str] = None
+    repo_url: Optional[str] = None
+    file_path: str
+    patched_code: str
+    cwe_id: Optional[str] = None
+    vuln_title: Optional[str] = None
+    github_token: Optional[str] = None
+
+class DeclinePatchRequest(BaseModel):
+    finding_id: str
+    file_path: str
+    repo_path: Optional[str] = None
 
 class RemediationReport(BaseModel):
     total_attempted: int = 0

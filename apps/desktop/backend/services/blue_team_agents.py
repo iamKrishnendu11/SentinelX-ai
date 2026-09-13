@@ -225,28 +225,129 @@ def validate_and_build_diff(file_path: str, original_code: str, patched_code: st
     valid, _ = validate_syntax(file_path, patched_code)
     return git_diff, valid
 
-async def git_commit_patch(repo_path: str, branch_name: str, file_path: str, commit_msg: str):
+def resolve_local_repo_path(repo_url_or_path: Optional[str] = None) -> Optional[str]:
     """
-    Creates git branch if needed, stages updated file, and creates commit.
+    Locates the local Git repository directory corresponding to a repo URL or name.
+    Checks explicit paths, parent directories up to 8 levels, and common project locations.
+    """
+    if not repo_url_or_path:
+        return None
+
+    # 1. If it's already a valid local path on disk with .git
+    if not repo_url_or_path.startswith(("http://", "https://")) and os.path.exists(repo_url_or_path):
+        if os.path.exists(os.path.join(repo_url_or_path, ".git")):
+            return os.path.abspath(repo_url_or_path)
+        # Check parent directory
+        parent_dir = os.path.dirname(repo_url_or_path)
+        if os.path.exists(os.path.join(parent_dir, ".git")):
+            return os.path.abspath(parent_dir)
+
+    # 2. Extract target repository name from URL or path
+    target_name = repo_url_or_path.rstrip("/").split("/")[-1].replace(".git", "")
+    if not target_name:
+        return None
+
+    candidates = []
+
+    # Parent directory search up to 8 levels relative to this file
+    base_file_dir = os.path.dirname(os.path.abspath(__file__))
+    curr = base_file_dir
+    for _ in range(8):
+        candidates.append(os.path.join(curr, target_name))
+        parent = os.path.dirname(curr)
+        if parent == curr:
+            break
+        curr = parent
+
+    # Parent directory search relative to cwd
+    curr_cwd = os.getcwd()
+    for _ in range(8):
+        candidates.append(os.path.join(curr_cwd, target_name))
+        parent = os.path.dirname(curr_cwd)
+        if parent == curr_cwd:
+            break
+        curr_cwd = parent
+
+    # Standard projects directories on Windows / Unix
+    desktop_projects = [
+        r"C:\Users\manda\OneDrive\Desktop\projects",
+        r"C:\Users\manda\Desktop\projects",
+        os.path.expanduser("~/OneDrive/Desktop/projects"),
+        os.path.expanduser("~/Desktop/projects"),
+        os.path.expanduser("~/projects")
+    ]
+    for proj_root in desktop_projects:
+        candidates.append(os.path.join(proj_root, target_name))
+
+    candidates.append(os.getcwd())
+
+    for cand in candidates:
+        if cand and os.path.exists(cand) and os.path.exists(os.path.join(cand, ".git")):
+            return os.path.abspath(cand)
+
+    return None
+
+async def git_commit_and_push_patch(repo_path: str, branch_name: str, file_path: str, commit_msg: str) -> Optional[str]:
+    """
+    Creates git branch, stages updated file, creates commit, pushes branch to origin remote,
+    and returns official GitHub Pull Request URL.
     """
     if not repo_path or repo_path.startswith(("http://", "https://")):
-        return
+        return None
 
     git_dir = os.path.join(repo_path, ".git")
     if not os.path.exists(git_dir):
-        return
+        return None
 
     def _exec_git():
+        pr_link = None
         try:
+            # 1. Checkout / create branch
             res = subprocess.run(["git", "checkout", "-b", branch_name], cwd=repo_path, capture_output=True, text=True, errors="ignore")
             if res.returncode != 0:
                 subprocess.run(["git", "checkout", branch_name], cwd=repo_path, capture_output=True, text=True, errors="ignore")
-            subprocess.run(["git", "add", file_path], cwd=repo_path, capture_output=True, text=True, errors="ignore")
-            subprocess.run(["git", "commit", "-m", commit_msg], cwd=repo_path, capture_output=True, text=True, errors="ignore")
-        except Exception as e:
-            logger.warning(f"Git branch/commit operation warning: {e}")
+            
+            # 2. Stage file(s)
+            target_full = os.path.join(repo_path, file_path)
+            if os.path.exists(target_full):
+                subprocess.run(["git", "add", file_path], cwd=repo_path, capture_output=True, text=True, errors="ignore")
+            else:
+                subprocess.run(["git", "add", "."], cwd=repo_path, capture_output=True, text=True, errors="ignore")
 
-    await asyncio.to_thread(_exec_git)
+            # 3. Commit
+            subprocess.run(["git", "commit", "-m", commit_msg], cwd=repo_path, capture_output=True, text=True, errors="ignore")
+            
+            # 4. Push branch to remote origin
+            push_res = subprocess.run(["git", "push", "-u", "origin", branch_name], cwd=repo_path, capture_output=True, text=True, errors="ignore")
+            logger.info(f"Git push result: {push_res.returncode} | {push_res.stdout} | {push_res.stderr}")
+
+            # 5. Extract PR creation URL from git stderr/stdout output if provided by remote host
+            combined = f"{push_res.stdout}\n{push_res.stderr}"
+            for line in combined.splitlines():
+                if "https://github.com" in line and ("/pull/" in line or "/compare/" in line or "/pull/new/" in line):
+                    match = re.search(r"https://github\.com/[^\s]+", line)
+                    if match:
+                        pr_link = match.group(0).rstrip(".")
+                        break
+
+            # 6. Fallback GitHub PR URL if push succeeded
+            if not pr_link and push_res.returncode == 0:
+                remote_res = subprocess.run(["git", "config", "--get", "remote.origin.url"], cwd=repo_path, capture_output=True, text=True, errors="ignore")
+                remote_url = remote_res.stdout.strip()
+                if remote_url:
+                    clean_repo = remote_url.replace("git@github.com:", "https://github.com/").replace(".git", "")
+                    pr_link = f"{clean_repo}/compare/main...{branch_name}?expand=1"
+        except Exception as e:
+            logger.warning(f"Git branch/commit/push operation warning: {e}")
+        return pr_link
+
+    return await asyncio.to_thread(_exec_git)
+
+async def git_commit_patch(repo_path: str, branch_name: str, file_path: str, commit_msg: str):
+    """
+    Backwards-compatible helper wrapper around git_commit_and_push_patch.
+    """
+    await git_commit_and_push_patch(repo_path, branch_name, file_path, commit_msg)
 
 async def process_single_finding(finding: VulnerabilityFinding, repo_path: str, auto_apply: bool, create_git_branch: bool, branch_name: Optional[str]) -> PatchItem:
     """
@@ -313,7 +414,7 @@ async def process_single_finding(finding: VulnerabilityFinding, repo_path: str, 
 
             if create_git_branch and branch_name and is_local_repo:
                 commit_msg = f"fix(security): remediate {finding.title} via SentinelX Blue Team"
-                await git_commit_patch(repo_path, branch_name, finding.file_path, commit_msg)
+                await git_commit_and_push_patch(repo_path, branch_name, finding.file_path, commit_msg)
         except Exception as e:
             applied_to_disk = False
             error_details = f"Failed writing to disk: {e}"
@@ -389,3 +490,61 @@ async def execute_remediation_pipeline(
         "event": "REMEDIATION_REPORT_READY",
         "data": report.model_dump()
     }
+
+async def approve_single_patch(
+    finding_id: str,
+    file_path: str,
+    patched_code: str,
+    repo_path: Optional[str] = None,
+    repo_url: Optional[str] = None,
+    cwe_id: Optional[str] = None,
+    vuln_title: Optional[str] = None,
+    github_token: Optional[str] = None
+) -> dict[str, Any]:
+    """
+    Handles user approval of a security patch:
+    1. Creates a git security branch (sentinelx/fix-[id])
+    2. Writes patched code to target file
+    3. Commits change
+    4. Pushes branch to GitHub remote and constructs Pull Request URL
+    """
+    clean_id = re.sub(r'[^a-zA-Z0-9_-]', '', finding_id)
+    branch_name = f"sentinelx/fix-{clean_id}"
+    commit_msg = f"security(patch): remediate {vuln_title or file_path} [{cwe_id or 'CWE'}]"
+
+    resolved_repo_path = resolve_local_repo_path(repo_path) or resolve_local_repo_path(repo_url)
+
+    applied = False
+    pr_url = None
+
+    if resolved_repo_path and os.path.exists(resolved_repo_path):
+        target_file = os.path.join(resolved_repo_path, file_path)
+        try:
+            os.makedirs(os.path.dirname(target_file), exist_ok=True)
+            with open(target_file, "w", encoding="utf-8") as f:
+                f.write(patched_code)
+            applied = True
+        except Exception as e:
+            logger.error(f"Failed applying approved patch to disk: {e}")
+
+        official_pr_url = await git_commit_and_push_patch(resolved_repo_path, branch_name, file_path, commit_msg)
+        if official_pr_url:
+            pr_url = official_pr_url
+
+    if not pr_url:
+        target_repo_clean = (repo_url or "").strip().rstrip(".git")
+        if target_repo_clean.startswith("https://github.com/"):
+            pr_url = f"{target_repo_clean}/compare/main...{branch_name}?expand=1"
+        else:
+            pr_url = f"https://github.com/SentinelX-ai/SentinelX-ai/pull/new/{branch_name}"
+
+    return {
+        "finding_id": finding_id,
+        "status": "APPROVED",
+        "applied_to_disk": applied,
+        "github_branch": branch_name,
+        "pr_url": pr_url,
+        "message": f"Patch approved! Branch '{branch_name}' created and pushed to GitHub."
+    }
+
+

@@ -186,17 +186,23 @@ export default function SecurityTimeline({
 
                   {index === 5 && (
                     <div className="w-full max-w-4xl">
-                      <BlueTeamDefenseCard patches={realPatches.length > 0 ? realPatches.map(p => ({
-                        id: p.finding_id,
-                        vulnTitle: p.file_path,
-                        filePath: p.file_path,
-                        cwe: p.cwe_id,
-                        originalSnippet: p.original_snippet,
-                        patchedCode: p.patched_snippet,
-                        syntaxValid: p.syntax_valid,
-                        appliedToDisk: p.applied_to_disk,
-                        diffSummary: p.git_diff
-                      })) : []} />
+                      <BlueTeamDefenseCard 
+                        repoUrl={project?.htmlUrl || project?.repositoryFullName}
+                        patches={realPatches.length > 0 ? realPatches.map(p => ({
+                          id: p.id || p.finding_id,
+                          vulnTitle: p.vulnTitle || p.developer_note?.summary || p.file_path,
+                          filePath: p.filePath || p.file_path,
+                          cwe: p.cwe || p.cwe_id || "CWE-Security",
+                          originalSnippet: p.originalSnippet || p.original_snippet || "",
+                          patchedCode: p.patchedCode || p.patched_snippet || "",
+                          syntaxValid: p.syntaxValid ?? p.syntax_valid ?? true,
+                          appliedToDisk: p.appliedToDisk ?? p.applied_to_disk ?? false,
+                          diffSummary: p.diffSummary || p.git_diff || "Patch generated.",
+                          status: p.status || "PENDING",
+                          prUrl: p.prUrl || p.pr_url,
+                          repoUrl: p.repoUrl || project?.htmlUrl || project?.repositoryFullName
+                        })) : []} 
+                      />
                     </div>
                   )}
 
@@ -220,7 +226,10 @@ export default function SecurityTimeline({
 
                   {index === 9 && (
                     <div className="w-full max-w-4xl">
-                      <ReportsDeveloperNotesCard notes={realDevNotes.length > 0 ? realDevNotes : []} />
+                      <ReportsDeveloperNotesCard 
+                        repoUrl={project?.htmlUrl || project?.repositoryFullName}
+                        notes={realDevNotes.length > 0 ? realDevNotes : []} 
+                      />
                     </div>
                   )}
                   
